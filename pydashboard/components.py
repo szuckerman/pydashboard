@@ -171,7 +171,7 @@ class Dashboard:
         self.html = div(self.item_str, {"class": "container"})
         self.outline_html = None
         GLOBAL_JS_CODE = [str(item) for item in self.items]
-        self.my_string = "\n".join(GLOBAL_JS_CODE)
+        self.global_js_code = "\n".join(GLOBAL_JS_CODE)
 
     def add_template(self, *items):
         item_str = [raw(str(item)) for item in items]
@@ -197,28 +197,13 @@ class Dashboard:
         f.close()
         webbrowser.open('file://' + path)
 
-    def run(self, host="127.0.0.1", port=5000, debug=False):
-        app = Flask(__name__)
-
-        @app.route("/")
-        def index():
-            return render_template(
-                "dashboard.html",
-                dimensions="\n".join(GLOBAL_DIMENSION_CODE),
-                json_dat=self.data.to_json(orient="records"),
-                chart_code=self.my_string,
-                dashboard=self.template
-            )
-
-        app.run(host=host, port=port, debug=debug)
-
     def view(self):
         template = env.get_template('dashboard.html')
 
         html_output = template.render(
             dimensions="\n".join(GLOBAL_DIMENSION_CODE),
             json_dat=self.data.to_json(orient="records"),
-            chart_code=self.my_string,
+            chart_code=self.global_js_code,
             dashboard=self.template
         )
 
@@ -453,3 +438,26 @@ class Dimension:
             var {dim_replaced}_group = {dim_replaced}_dimension.group();
         """
         return dimension_string.format(dim=column, dim_replaced=self.dim_replaced)
+
+class MultiDimension:
+    def __init__(self, *args):
+
+        self.dim_replaced = [column.replace(" ", "_").replace("(", "").replace(")", "") for column in args]
+
+        self.dim = '[' + ", ".join(f"d['{item}']" for item in self.dim_replaced) + ']'
+        self.dim_replaced_together = '_'.join(self.dim_replaced)
+        self.dimension_name = f"{self.dim_replaced_together}_dimension"
+        self.group_name = f"{self.dim_replaced_together}_group"
+        GLOBAL_DIMENSION_CODE.append(self.dimension_code)
+
+    @property
+    def dimension_code(self):
+        dimension_string = """
+            var {dim_replaced_together}_dimension = facts.dimension(function(d){{return {dim};}});
+            var {dim_replaced_together}_group = {dim_replaced_together}_dimension.group();
+        """.format(dim_replaced_together=self.dim_replaced_together, dim=self.dim)
+        return dimension_string
+
+
+
+sam=MultiDimension('total', 'tip')

@@ -39,6 +39,90 @@ class MarginMixin(BaseMixin, metaclass=ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+class CoordinateGridMixin(ColorMixin, MarginMixin, metaclass=ABCMeta):
+    @abstractmethod
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class ScatterPlot(CoordinateGridMixin):
+    def __init__(self,
+                 name,
+                 dimension,
+                 customSymbol=None,
+                 emptySize=None,
+                 excludedColor=None,
+                 excludedOpacity=None,
+                 excludedSize=None,
+                 existenceAccessor=None,
+                 highlightedSize=None,
+                 symbol=None,
+                 symbolSize=None):
+        self.name=name
+        self.dimension=dimension
+        self.customSymbol=customSymbol
+        self.emptySize=emptySize
+        self.excludedColor=excludedColor
+        self.excludedOpacity=excludedOpacity
+        self.excludedSize=excludedSize
+        self.existenceAccessor=existenceAccessor
+        self.highlightedSize=highlightedSize
+        self.symbol=symbol
+        self.symbolSize=symbolSize
+
+    @property
+    def js_chart_code(self):
+        INDENTION = "    "
+        DIMENSION_SPACING = "\n" + INDENTION * 2
+
+        dimension_string_list = [
+            f'var scatter_plot_{self.name.replace("-", "_")} = dc.scatterPlot("#{self.name}")',
+            f".dimension({self.dimension.dimension_name})",
+            f".group({self.dimension.group_name})",
+        ]
+
+        axis_string_list = [f'scatter_plot_{self.name.replace("-", "_")}']
+
+        if self.customSymbol:
+            dimension_string_list.append(f".customSymbol({self.customSymbol})")
+
+        if self.emptySize:
+            dimension_string_list.append(f".emptySize({self.emptySize})")
+
+        if self.excludedColor:
+            dimension_string_list.append(f".excludedColor({self.excludedColor})")
+
+        if self.excludedOpacity:
+            dimension_string_list.append(f".excludedOpacity({self.excludedOpacity})")
+
+        if self.excludedSize:
+            dimension_string_list.append(f".excludedSize({self.excludedSize})")
+
+        if self.existenceAccessor:
+            dimension_string_list.append(f".existenceAccessor({self.existenceAccessor})")
+
+        if self.highlightedSize:
+            dimension_string_list.append(f".highlightedSize({self.highlightedSize})")
+
+        if self.symbol:
+            dimension_string_list.append(f".symbol({self.symbol})")
+
+        if self.symbolSize:
+            dimension_string_list.append(f".symbolSize({self.symbolSize})")
+
+        axis_string_list.append(f".x(d3.scaleLinear().domain([14, 20]))")
+
+        DIMENSION_FINAL = DIMENSION_SPACING.join(dimension_string_list) + ";"
+        AXIS_FINAL = DIMENSION_SPACING.join(axis_string_list) + ";"
+
+        return DIMENSION_FINAL + '\n' + AXIS_FINAL
+
+    def __str__(self):
+        return self.js_chart_code
+
+    def __repr__(self):
+        return f'<ScatterPlot: "#{self.name}">'
+
 
 class RowChart(CapMixin, ColorMixin, MarginMixin):
     def __init__(self,
