@@ -2,6 +2,8 @@ from abc import ABCMeta, abstractmethod
 from copy import copy
 from dominate.tags import div
 
+INDENTION = "    "
+DIMENSION_SPACING = "\n" + INDENTION * 2
 
 class BaseMixin(metaclass=ABCMeta):
     @abstractmethod
@@ -69,9 +71,6 @@ class BarChart(StackMixin):
 
     @property
     def js_chart_code(self):
-        INDENTION = "    "
-        DIMENSION_SPACING = "\n" + INDENTION * 2
-
         dimension_string_list = [
             f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")',
             f".dimension({self.dimension.dimension_name})",
@@ -143,8 +142,6 @@ class ScatterPlot(CoordinateGridMixin):
 
     @property
     def js_chart_code(self):
-        INDENTION = "    "
-        DIMENSION_SPACING = "\n" + INDENTION * 2
 
         dimension_string_list = [
             f'var scatter_plot_{self.name.replace("-", "_")} = dc.scatterPlot("#{self.name}")',
@@ -226,8 +223,6 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
 
     @property
     def js_chart_code(self):
-        INDENTION = "    "
-        DIMENSION_SPACING = "\n" + INDENTION * 2
 
         dimension_string_list = [
             f'var row_chart_{self.name.replace("-", "_")} = dc.rowChart("#{self.name}")',
@@ -303,6 +298,7 @@ class PieChart(CapMixin):
     ):
         super().__init__(*args, **kwargs)
         self.name = name
+        self.name_replaced = f'pie_chart_{self.name.replace("-", "_")}'
         self.dimension = dimension
         # self.html = div(id=name)
 
@@ -320,8 +316,6 @@ class PieChart(CapMixin):
 
     @property
     def js_chart_code(self):
-        INDENTION = "    "
-        DIMENSION_SPACING = "\n" + INDENTION * 2
 
         dimension_string_list = [
             f'var pie_chart_{self.name.replace("-", "_")} = dc.pieChart("#{self.name}")',
@@ -362,24 +356,10 @@ class PieChart(CapMixin):
             )
 
         if self.label:
-            var_name = f'pie_chart_{self.name.replace("-", "_")}'
-            var_name_list = [var_name]
-            precision = 1
-            printed_precision = '0' * precision
-
-            func_name = f'''.label(function(d){{
-                if ({var_name}.hasFilter() && !{var_name}.hasFilter(d.key)) {{
-                    return d.key + ' (0%)';
-                }}
-                var label = d.key;
-                if (all.value()) {{
-                    label += ' (' + Math.floor(d.value / all.value() * 100{printed_precision})/1{printed_precision} + '%)';
-                }}
-                return label;
-                }})'''
-
-            return DIMENSION_SPACING.join(dimension_string_list) + ";" + \
-                DIMENSION_SPACING.join(var_name_list + [func_name])
+            self.label.chart_name = self.name_replaced
+            if self.label.label_type == 'percent':
+                return DIMENSION_SPACING.join(dimension_string_list) + ";" + \
+                       self.label.percent
 
         return DIMENSION_SPACING.join(dimension_string_list) + ";"
 
@@ -406,6 +386,26 @@ class PieChart(CapMixin):
     def __repr__(self):
         return f'<PieChart: "#{self.name}">'
 
-#
-# class Label:
-#     def __init__(self):
+
+class Label:
+    def __init__(self, label_type=None, precision=2, chart_name=''):
+        self.chart_name = chart_name
+        self.label_type = label_type
+        self.precision = precision
+
+    @property
+    def percent(self):
+        printed_precision = '0' * self.precision
+
+        func_name = f'''.label(function(d){{
+            if ({self.chart_name}.hasFilter() && !{self.chart_name}.hasFilter(d.key)) {{
+                return d.key + ' (0%)';
+            }}
+            var label = d.key;
+            if (all.value()) {{
+                label += ' (' + Math.floor(d.value / all.value() * 100{printed_precision})/1{printed_precision} + '%)';
+            }}
+            return label;
+            }})'''
+
+        return self.chart_name + DIMENSION_SPACING + func_name

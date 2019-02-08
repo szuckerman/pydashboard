@@ -3,7 +3,7 @@ import numpy as np
 from pydashboard import components as s
 from pydashboard.example_data.example_data import dat
 from pydashboard.components import Dimension, MultiDimension
-from pydashboard.dc_components import PieChart, RowChart, ScatterPlot, BarChart
+from pydashboard.dc_components import PieChart, RowChart, ScatterPlot, BarChart, Label
 from pydashboard.dominate_template import dashboard3 as t
 
 dat = pd.read_csv('/Users/zucks/PycharmProjects/pydashboard/pydashboard/example_data/ndx.csv')
@@ -32,7 +32,7 @@ gain_dim = Dimension('gain')
 year_dim = Dimension('year')
 fluctuation_dim = Dimension('fluctuation')
 
-pie_chart1 = PieChart("A", gain_dim, radius=200, label=True)
+pie_chart1 = PieChart("A", gain_dim, radius=200, label=Label('percent', precision=2))
 pie_chart2 = BarChart("B", fluctuation_dim, width=400, height=250, elasticY=True, alwaysUseRounding=True, gap=1, centerBar=True)
 
 
