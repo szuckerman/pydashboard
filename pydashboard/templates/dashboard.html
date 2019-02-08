@@ -45,6 +45,7 @@
     </script>
     <script>
         var facts = crossfilter(json_dat);
+        var all = facts.groupAll();
         {{ dimensions|safe }}
     </script>
     <title>Dashboard Test</title>
