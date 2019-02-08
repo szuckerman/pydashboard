@@ -6,13 +6,14 @@ from dominate.tags import div
 class BaseMixin(metaclass=ABCMeta):
     @abstractmethod
     def __init__(
-        self, chartGroup=None, dimension=None, group=None, height=None, width=None
+        self, chartGroup=None, dimension=None, group=None, height=None, width=None, label=None
     ):
         self.chartGroup = chartGroup
         self.dimension = dimension
         self.group = group
         self.height = height
         self.width = width
+        self.label = label
 
 
 
@@ -39,10 +40,78 @@ class MarginMixin(BaseMixin, metaclass=ABCMeta):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
 class CoordinateGridMixin(ColorMixin, MarginMixin, metaclass=ABCMeta):
+    @abstractmethod
+    def __init__(self, elasticY, *args, **kwargs):
+        self.elasticY = elasticY
+        super().__init__(*args, **kwargs)
+
+
+class StackMixin(CoordinateGridMixin, metaclass=ABCMeta):
     @abstractmethod
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class BarChart(StackMixin):
+    def __init__(self, name, dimension, alwaysUseRounding=None,
+        barPadding=None, centerBar=None, gap=None, outerPadding=None,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = name
+        self.dimension = dimension
+        self.alwaysUseRounding = alwaysUseRounding
+        self.barPadding = barPadding
+        self.centerBar = centerBar
+        self.gap = gap
+        self.outerPadding = outerPadding
+
+    @property
+    def js_chart_code(self):
+        INDENTION = "    "
+        DIMENSION_SPACING = "\n" + INDENTION * 2
+
+        dimension_string_list = [
+            f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")',
+            f".dimension({self.dimension.dimension_name})",
+            f".group({self.dimension.group_name})",
+        ]
+
+        axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
+
+
+        if self.elasticY:
+            dimension_string_list.append(f".elasticY(true)")
+
+        if self.centerBar:
+            dimension_string_list.append(f".centerBar(true)")
+
+        if self.alwaysUseRounding:
+            dimension_string_list.append(f".alwaysUseRounding(true)")
+
+        if self.gap:
+            dimension_string_list.append(f".gap({self.gap})")
+
+        if self.width:
+            dimension_string_list.append(f".width({self.width})")
+
+        if self.height:
+            dimension_string_list.append(f".height({self.height})")
+
+        axis_string_list.append(f".x(d3.scaleLinear().domain([-25, 25]))")
+
+        DIMENSION_FINAL = DIMENSION_SPACING.join(dimension_string_list) + ";"
+        AXIS_FINAL = DIMENSION_SPACING.join(axis_string_list) + ";"
+
+        return DIMENSION_FINAL + '\n' + AXIS_FINAL
+
+    def __str__(self):
+        return self.js_chart_code
+
+    def __repr__(self):
+        return f'<BarChart: "#{self.name}">'
+
 
 
 class ScatterPlot(CoordinateGridMixin):
@@ -57,7 +126,9 @@ class ScatterPlot(CoordinateGridMixin):
                  existenceAccessor=None,
                  highlightedSize=None,
                  symbol=None,
-                 symbolSize=None):
+                 symbolSize=None,
+                 *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.name=name
         self.dimension=dimension
         self.customSymbol=customSymbol
@@ -290,6 +361,26 @@ class PieChart(CapMixin):
                 f".externalRadiusPadding({self.externalRadiusPadding})"
             )
 
+        if self.label:
+            var_name = f'pie_chart_{self.name.replace("-", "_")}'
+            var_name_list = [var_name]
+            precision = 1
+            printed_precision = '0' * precision
+
+            func_name = f'''.label(function(d){{
+                if ({var_name}.hasFilter() && !{var_name}.hasFilter(d.key)) {{
+                    return d.key + ' (0%)';
+                }}
+                var label = d.key;
+                if (all.value()) {{
+                    label += ' (' + Math.floor(d.value / all.value() * 100{printed_precision})/1{printed_precision} + '%)';
+                }}
+                return label;
+                }})'''
+
+            return DIMENSION_SPACING.join(dimension_string_list) + ";" + \
+                DIMENSION_SPACING.join(var_name_list + [func_name])
+
         return DIMENSION_SPACING.join(dimension_string_list) + ";"
 
     # def __len__(self):
@@ -315,3 +406,6 @@ class PieChart(CapMixin):
     def __repr__(self):
         return f'<PieChart: "#{self.name}">'
 
+#
+# class Label:
+#     def __init__(self):

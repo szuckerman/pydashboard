@@ -60,3 +60,17 @@ dashboard2 = c.Container([rowa, rowb, rowc])
 
 
 
+
+
+A=c.Col6(id='A', height=100)
+B=c.Col6(id='B', height=100)
+
+rowa = c.Row([A, B])
+
+# row1 = c.Row([col2,col1])
+
+dashboard3 = c.Container(rowa)
+
+
+
+

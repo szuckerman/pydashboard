@@ -29,6 +29,7 @@ dashboard = s.Dashboard(scatter_plot, pie_chart2, pie_chart3, pie_chart4, pie_ch
                         pie_chart6, pie_chart7, pie_chart8, pie_chart9, data=dat, template=t)
 
 dashboard.view()
+dashboard.view_outlines()
 # dashboard.run()
 # s.Dashboard(data=iris_df).run()
 # {'pie_chart': pie_chart}
