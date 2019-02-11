@@ -39,8 +39,13 @@ class ColorMixin(BaseMixin, metaclass=ABCMeta):
 
 class MarginMixin(BaseMixin, metaclass=ABCMeta):
     @abstractmethod
-    def __init__(self, *args, **kwargs):
+    def __init__(self, margin_top=None, margin_right=None, margin_bottom=None,
+                 margin_left=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.margin_top=margin_top
+        self.margin_right=margin_right
+        self.margin_bottom=margin_bottom
+        self.margin_left=margin_left
 
 
 class CoordinateGridMixin(ColorMixin, MarginMixin, metaclass=ABCMeta):
@@ -78,6 +83,7 @@ class BarChart(StackMixin):
         ]
 
         axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
+        margin_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
 
 
         if self.elasticY:
@@ -103,7 +109,25 @@ class BarChart(StackMixin):
         DIMENSION_FINAL = DIMENSION_SPACING.join(dimension_string_list) + ";"
         AXIS_FINAL = DIMENSION_SPACING.join(axis_string_list) + ";"
 
-        return DIMENSION_FINAL + '\n' + AXIS_FINAL
+        if self.margin_left:
+            margin_string_list.append(f'.margins().left = {self.margin_left}')
+
+        if self.margin_right:
+            margin_string_list.append(f'.margins().right = {self.margin_right}')
+
+        if self.margin_top:
+            margin_string_list.append(f'.margins().top = {self.margin_top}')
+
+        if self.margin_bottom:
+            margin_string_list.append(f'.margins().bottom = {self.margin_bottom}')
+
+        if any((self.margin_left,  self.margin_right,  self.margin_top,  self.margin_bottom)):
+            MARGIN_FINAL = DIMENSION_SPACING.join(margin_string_list) + ";"
+            return DIMENSION_FINAL + '\n' + AXIS_FINAL + '\n' + MARGIN_FINAL
+
+        else:
+            return DIMENSION_FINAL + '\n' + AXIS_FINAL
+
 
     def __str__(self):
         return self.js_chart_code
