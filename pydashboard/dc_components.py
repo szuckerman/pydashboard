@@ -281,6 +281,12 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
         if self.x:
             dimension_string_list.append(f".x({self.x})")
 
+        if self.height:
+            dimension_string_list.append(f".height({self.height})")
+
+        if self.width:
+            dimension_string_list.append(f".width({self.width})")
+
         if self.xAxis:
             axis_string_list.append(f".xAxis().{self.xAxis}")
 
