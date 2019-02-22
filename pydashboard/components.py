@@ -2,22 +2,33 @@ from dominate.tags import *
 from dominate.util import raw, text
 from flask import Flask, render_template
 from jinja2 import Environment, FileSystemLoader
-
+import pandas as pd
 import tempfile
 import webbrowser
 
 
-env = Environment(loader=FileSystemLoader('/Users/zucks/PycharmProjects/pydashboard/pydashboard/templates'))
+env = Environment(
+    loader=FileSystemLoader(
+        "/Users/zucks/PycharmProjects/pydashboard/pydashboard/templates"
+    )
+)
 
 
 GLOBAL_JS_CODE = []
 GLOBAL_DIMENSION_CODE = []
+DATA_COLUMNS = set()
 
 
 def hello_world(x):
     return "hello %s!" % x
 
-
+def is_number(s):
+    '''From: https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float'''
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 # class Row:
 #     def __init__(self, *args):
 #         self.children = args
@@ -148,29 +159,38 @@ def hello_world(x):
 class ChartElement(div):
     def __init__(self, id=None, height=None, padding=5, *args, **kwargs):
         super().__init__(id=id, *args, **kwargs)
-        self.id=id
-        self.height=height
-        self.padding=padding
-        self.__class__.__name__ = 'div'
+        self.id = id
+        self.height = height
+        self.padding = padding
+        self.__class__.__name__ = "div"
         self.add(text(self.id))
         if self.height:
             self.update_height(self.height)
 
     def update_height(self, height):
         self.height = height
-        self.set_attribute('style', 'height: {height:.0f}vh'.format(height=(100 - self.padding * 2) * self.height / 100))
+        self.set_attribute(
+            "style",
+            "height: {height:.0f}vh".format(
+                height=(100 - self.padding * 2) * self.height / 100
+            ),
+        )
 
 
 # item = ChartElement(id="something", height=100)
 
+
 class Dashboard:
-    def __init__(self, *items, data=None, template=None):
+    def __init__(self, *items, data=pd.DataFrame(), template=None):
+        global DATA_COLUMNS
         self.data = data
         self.items = items
         self.template = template
         self.html = div(self.item_str, {"class": "container"})
         self.outline_html = None
         GLOBAL_JS_CODE = [str(item) for item in self.items]
+        if not data.empty:
+            DATA_COLUMNS.update(set(data.columns))
         self.global_js_code = "\n".join(GLOBAL_JS_CODE)
 
     def add_template(self, *items):
@@ -186,41 +206,41 @@ class Dashboard:
 
     def view_outlines(self):
 
-        template = env.get_template('dashboard_outline.html')
+        template = env.get_template("dashboard_outline.html")
 
         html_output = template.render(dashboard_outline=self.template)
 
         tmp = tempfile.NamedTemporaryFile(delete=False)
-        path = tmp.name + '.html'
-        f = open(path, 'w')
+        path = tmp.name + ".html"
+        f = open(path, "w")
         f.write(html_output)
         f.close()
-        webbrowser.open('file://' + path)
+        webbrowser.open("file://" + path)
 
     def view(self):
-        template = env.get_template('dashboard.html')
+        template = env.get_template("dashboard.html")
 
         html_output = template.render(
             dimensions="\n".join(GLOBAL_DIMENSION_CODE),
             json_dat=self.data.to_json(orient="records"),
             chart_code=self.global_js_code,
-            dashboard=self.template
+            dashboard=self.template,
         )
 
         tmp = tempfile.NamedTemporaryFile(delete=False)
-        path = tmp.name + '.html'
-        f = open(path, 'w')
+        path = tmp.name + ".html"
+        f = open(path, "w")
         f.write(html_output)
         f.close()
-        webbrowser.open('file://' + path)
+        webbrowser.open("file://" + path)
 
 
 class Row(div):
     def __init__(self, other=None, height=None, padding=5, *args, **kwargs):
-        super().__init__(cls='row', *args, **kwargs)
-        self.height=height
-        self.padding=padding
-        self.__class__.__name__ = 'div'
+        super().__init__(cls="row", *args, **kwargs)
+        self.height = height
+        self.padding = padding
+        self.__class__.__name__ = "div"
         if self.height:
             self.update_height(self.height)
         if other:
@@ -232,15 +252,20 @@ class Row(div):
 
     def update_height(self, height):
         self.height = height
-        self.set_attribute('style', 'height: {height:.0f}vh'.format(height=(100 - self.padding * 2) * self.height / 100))
+        self.set_attribute(
+            "style",
+            "height: {height:.0f}vh".format(
+                height=(100 - self.padding * 2) * self.height / 100
+            ),
+        )
 
 
 class Container(div):
     def __init__(self, other=None, height=None, padding=5, *args, **kwargs):
-        super().__init__(cls='container', *args, **kwargs)
-        self.height=height
-        self.padding=padding
-        self.__class__.__name__ = 'div'
+        super().__init__(cls="container", *args, **kwargs)
+        self.height = height
+        self.padding = padding
+        self.__class__.__name__ = "div"
         if self.height:
             self.update_height(self.height)
         if other:
@@ -252,17 +277,21 @@ class Container(div):
 
     def update_height(self, height):
         self.height = height
-        self.set_attribute('style', 'height: {height:.0f}vh'.format(height=(100 - self.padding * 2) * self.height / 100))
-
+        self.set_attribute(
+            "style",
+            "height: {height:.0f}vh".format(
+                height=(100 - self.padding * 2) * self.height / 100
+            ),
+        )
 
 
 class Col(div):
     def __init__(self, other=None, height=None, padding=5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.add(raw(other)) # Logic to add child dominate tag
-        self.height=height
-        self.padding=padding
-        self.__class__.__name__ = 'div'
+        self.height = height
+        self.padding = padding
+        self.__class__.__name__ = "div"
         if self.height:
             self.update_height(self.height)
         if other:
@@ -274,76 +303,90 @@ class Col(div):
 
     def update_height(self, height):
         self.height = height
-        self.set_attribute('style', 'height: {height:.0f}vh'.format(height=(100 - self.padding * 2) * self.height / 100))
+        self.set_attribute(
+            "style",
+            "height: {height:.0f}vh".format(
+                height=(100 - self.padding * 2) * self.height / 100
+            ),
+        )
 
     def add_class(self, new_cls):
-        self.set_attribute('style', 'height: {height:.0f}vh'.format(height=(100 - self.padding * 2) * self.height / 100))
-        self.attributes['class'] = self.attributes['class'] + ' ' + new_cls
+        self.set_attribute(
+            "style",
+            "height: {height:.0f}vh".format(
+                height=(100 - self.padding * 2) * self.height / 100
+            ),
+        )
+        self.attributes["class"] = self.attributes["class"] + " " + new_cls
 
     def add_class(self, new_cls):
-        self.set_attribute('style', 'height: {height:.0f}vh'.format(height=(100 - self.padding * 2) * self.height / 100))
-        self.attributes['class'] = self.attributes['class'] + ' ' + new_cls
+        self.set_attribute(
+            "style",
+            "height: {height:.0f}vh".format(
+                height=(100 - self.padding * 2) * self.height / 100
+            ),
+        )
+        self.attributes["class"] = self.attributes["class"] + " " + new_cls
 
 
 class Col1(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-1', *args, **kwargs)
+        super().__init__(cls="col-md-1", *args, **kwargs)
 
 
 class Col2(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-2', *args, **kwargs)
+        super().__init__(cls="col-md-2", *args, **kwargs)
 
 
 class Col3(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-3', *args, **kwargs)
+        super().__init__(cls="col-md-3", *args, **kwargs)
 
 
 class Col4(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-4', *args, **kwargs)
+        super().__init__(cls="col-md-4", *args, **kwargs)
 
 
 class Col5(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-5', *args, **kwargs)
+        super().__init__(cls="col-md-5", *args, **kwargs)
 
 
 class Col6(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-6', *args, **kwargs)
+        super().__init__(cls="col-md-6", *args, **kwargs)
 
 
 class Col7(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-7', *args, **kwargs)
+        super().__init__(cls="col-md-7", *args, **kwargs)
 
 
 class Col8(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-8', *args, **kwargs)
+        super().__init__(cls="col-md-8", *args, **kwargs)
 
 
 class Col9(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-9', *args, **kwargs)
+        super().__init__(cls="col-md-9", *args, **kwargs)
 
 
 class Col10(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-10', *args, **kwargs)
+        super().__init__(cls="col-md-10", *args, **kwargs)
 
 
 class Col11(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-11', *args, **kwargs)
+        super().__init__(cls="col-md-11", *args, **kwargs)
 
 
 class Col12(Col):
     def __init__(self, *args, **kwargs):
-        super().__init__(cls='col-md-12', *args, **kwargs)
-
+        super().__init__(cls="col-md-12", *args, **kwargs)
 
 
 # sam2=Col6(height=100)
@@ -422,6 +465,7 @@ class Col12(Col):
 #         super().__init__(classes=["md-12"], *args, **kwargs)
 #
 
+
 class Dimension:
     def __init__(self, column):
         self.dim_replaced = column.replace(" ", "_").replace("(", "").replace(")", "")
@@ -439,13 +483,17 @@ class Dimension:
         """
         return dimension_string.format(dim=column, dim_replaced=self.dim_replaced)
 
+
 class MultiDimension:
     def __init__(self, *args):
 
-        self.dim_replaced = [column.replace(" ", "_").replace("(", "").replace(")", "") for column in args]
+        self.dim_replaced = [
+            column.replace(" ", "_").replace("(", "").replace(")", "")
+            for column in args
+        ]
 
-        self.dim = '[' + ", ".join(f"d['{item}']" for item in self.dim_replaced) + ']'
-        self.dim_replaced_together = '_'.join(self.dim_replaced)
+        self.dim = "[" + ", ".join(f"d['{item}']" for item in self.dim_replaced) + "]"
+        self.dim_replaced_together = "_".join(self.dim_replaced)
         self.dimension_name = f"{self.dim_replaced_together}_dimension"
         self.group_name = f"{self.dim_replaced_together}_group"
         GLOBAL_DIMENSION_CODE.append(self.dimension_code)
@@ -455,9 +503,554 @@ class MultiDimension:
         dimension_string = """
             var {dim_replaced_together}_dimension = facts.dimension(function(d){{return {dim};}});
             var {dim_replaced_together}_group = {dim_replaced_together}_dimension.group();
-        """.format(dim_replaced_together=self.dim_replaced_together, dim=self.dim)
+        """.format(
+            dim_replaced_together=self.dim_replaced_together, dim=self.dim
+        )
         return dimension_string
 
 
+class NamedDimension2:
+    def __init__(self, columns=None, groupby=None):
 
-sam=MultiDimension('total', 'tip')
+        self.columns = columns
+
+        if isinstance(groupby, list):
+            self.dim_replaced = [
+                column.replace(" ", "_").replace("(", "").replace(")", "")
+                for column in groupby
+            ]
+
+        else:
+            self.dim_replaced = (
+                groupby.replace(" ", "_").replace("(", "").replace(")", "")
+            )
+
+        if isinstance(self.dim_replaced, list):
+            self.dim = (
+                "[" + ", ".join(f"d['{item}']" for item in self.dim_replaced) + "]"
+            )
+            self.dim_replaced_together = "_".join(self.dim_replaced)
+
+        else:
+            self.dim = f"d['{self.dim_replaced}']"
+            self.dim_replaced_together = self.dim_replaced
+
+        self.dimension_name = f"{self.dim_replaced_together}_dimension"
+        self.group_name = f"{self.dim_replaced_together}_group"
+        GLOBAL_DIMENSION_CODE.append(self.dimension_code)
+
+    @property
+    def reduce_group_code(self):
+        if isinstance(self.columns, dict):
+            col_added = []
+            for k, v in self.columns.items():
+                has_division = ''
+                if isinstance(v, VE):
+                    if '/' in v.colname:
+                        has_division = " : 0"
+                    col_added.append("p.{k} += {v}{has_division};".format(k=k, v=str(v)[1:-1], has_division=has_division))
+                else:
+                    col_added.append("p.{k} += {v};".format(k=k, v=str(v)))
+
+            col_removed = []
+            for k, v in self.columns.items():
+                has_division = ''
+                if isinstance(v, VE):
+                    if '/' in v.colname:
+                        has_division = " : 0"
+                    col_removed.append("p.{k} -= {v}{has_division};".format(k=k, v=str(v)[1:-1], has_division=has_division))
+                else:
+                    col_removed.append("p.{k} -= {v};".format(k=k, v=str(v)))
+
+            col_init = [
+                "{column}: 0".format(column=column) for column in self.columns.keys()
+            ]
+
+        else:
+            col_added = [
+                "p.{column} += v.{column};".format(column=column)
+                for column in self.columns
+            ]
+
+            col_removed = [
+                "p.{column} -= v.{column};".format(column=column)
+                for column in self.columns
+            ]
+
+            col_init = ["{column}: 0".format(column=column) for column in self.columns]
+
+        col_added_joined = "\n\t\t".join(col_added)
+
+        col_removed_joined = "\n\t\t".join(col_removed)
+
+        col_init_joined = ",\n\t\t".join(col_init)
+
+        data_added = f"""
+                function (p, v) {{
+                    ++p.count;
+                    {col_added_joined}
+                    return p;
+                }},
+                """
+
+        data_removed = f"""
+                function (p, v) {{
+                    --p.count;
+                    {col_removed_joined}
+                    return p;
+                }},
+                """
+
+        data_init = f"""
+                /* initialize p */
+                function () {{
+                    return {{
+                        count: 0,
+                        {col_init_joined}
+                    }};
+                }}
+        """
+
+        reduce_group_code = f"""
+            var {self.dim_replaced_together}_group = {self.dim_replaced_together}_dimension.group().reduce(
+                /* callback for when data is added to the current filter results */
+                {data_added}
+                /* callback for when data is removed from the current filter results */
+                {data_removed}
+                /* initialize p */
+                {data_init}
+            );
+        """
+        return reduce_group_code
+
+    @property
+    def dimension_code(self):
+        dimension_string = """
+            var {dim_replaced_together}_dimension = facts.dimension(function(d){{return {dim};}});
+            {reduce_group_code}
+        """.format(
+            dim_replaced_together=self.dim_replaced_together,
+            dim=self.dim,
+            reduce_group_code=self.reduce_group_code,
+        )
+        return dimension_string
+
+    def __str__(self):
+        return self.reduce_group_code
+
+
+class NamedDimension:
+    def __init__(self, columns=None, groupby=None):
+
+        self.columns = columns
+
+        if isinstance(groupby, list):
+            self.dim_replaced = [
+                column.replace(" ", "_").replace("(", "").replace(")", "")
+                for column in groupby
+            ]
+
+        else:
+            self.dim_replaced = (
+                groupby.replace(" ", "_").replace("(", "").replace(")", "")
+            )
+
+        if isinstance(self.dim_replaced, list):
+            self.dim = (
+                "[" + ", ".join(f"d['{item}']" for item in self.dim_replaced) + "]"
+            )
+            self.dim_replaced_together = "_".join(self.dim_replaced)
+
+        else:
+            self.dim = f"d['{self.dim_replaced}']"
+            self.dim_replaced_together = self.dim_replaced
+
+        self.dimension_name = f"{self.dim_replaced_together}_dimension"
+        self.group_name = f"{self.dim_replaced_together}_group"
+        GLOBAL_DIMENSION_CODE.append(self.dimension_code)
+
+    @property
+    def reduce_group_code(self):
+
+        for col in self.columns:
+            col.add_or_remove = 'add'
+            col_added = [str(col) for col in self.columns]
+
+        for col in self.columns:
+            col.add_or_remove = 'remove'
+            col_removed = [str(col) for col in self.columns]
+
+        col_init = ["{column}: 0".format(column=col.column) for col in self.columns]
+
+        col_added_joined = "\n\t\t".join(col_added)
+
+        col_removed_joined = "\n\t\t".join(col_removed)
+
+        col_init_joined = ",\n\t\t".join(col_init)
+
+        data_added = (""
+            'function (p, v) {'
+            '    ++p.count;'
+            f'    {col_added_joined}'
+            '    return p;'
+            '},')
+
+        data_removed = (""
+            'function (p, v) {'
+            '    --p.count;'
+            f'    {col_removed_joined}'
+            '    return p;'
+            '},')
+
+        data_init = (""
+            'function () {'
+            '    return {'
+            '        count: 0,'
+            f'        {col_init_joined}'
+            '    };'
+            '}')
+
+        reduce_group_code = f"""
+            var {self.dim_replaced_together}_group = {self.dim_replaced_together}_dimension.group().reduce(
+                /* callback for when data is added to the current filter results */
+                {data_added}
+                /* callback for when data is removed from the current filter results */
+                {data_removed}
+                /* initialize p */
+                {data_init}
+                );
+        """
+        return reduce_group_code
+
+    @property
+    def dimension_code(self):
+        dimension_string = """
+            var {dim_replaced_together}_dimension = facts.dimension(function(d){{return {dim};}});
+            {reduce_group_code}
+        """.format(
+            dim_replaced_together=self.dim_replaced_together,
+            dim=self.dim,
+            reduce_group_code=self.reduce_group_code,
+        )
+        return dimension_string
+
+    def __str__(self):
+        return self.reduce_group_code
+
+
+def _is_str(x):
+    col_set = {
+        "date",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "oi",
+        "change",
+        "absGain",
+        "fluctuation",
+        "sumIndex",
+    }
+    if isinstance(x, str):
+        if x in col_set:
+            return "v." + x
+        return "p." + x
+    else:
+        return str(x)
+
+
+class Divide:
+    def __init__(self, numerator=None, denominator=None):
+        self.numerator = _is_str(numerator)
+        self.denominator = _is_str(denominator)
+        self.returned_string = (
+            f"{self.denominator} ? {self.numerator} / {self.denominator} : 0;"
+        )
+
+    def __str__(self):
+        return self.returned_string
+
+    def __repr__(self):
+        return f"<Divide: {self.numerator}/{self.denominator}>"
+
+
+class Multiply:
+    def __init__(self, *args):
+        str_args = (_is_str(arg) for arg in args)
+        self.returned_string = " * ".join(str_args)
+
+    def __str__(self):
+        return self.returned_string
+
+    def __repr__(self):
+        return f"<Multiply: {self.returned_string}>"
+
+
+class Subtract:
+    def __init__(self, *args):
+        str_args = (_is_str(arg) for arg in args)
+        self.returned_string = " - ".join(str_args)
+
+    def __str__(self):
+        return self.returned_string
+
+    def __repr__(self):
+        return f"<Subtract: {self.returned_string}>"
+
+
+class Abs:
+    def __init__(self, arg):
+        self.arg = arg
+        self.returned_string = f"Math.abs({self.arg})"
+
+    def __str__(self):
+        return self.returned_string
+
+    def __repr__(self):
+        return f"<Abs: {self.returned_string}>"
+
+
+class Add:
+    def __init__(self, *args):
+        str_args = (_is_str(arg) for arg in args)
+        self.returned_string = " + ".join(str_args)
+
+    def __str__(self):
+        return self.returned_string
+
+    def __repr__(self):
+        return f"<Add: {self.returned_string}>"
+
+
+class VC:
+    def __init__(self, colname):
+        self.colname = colname
+
+    @property
+    def columns(self):
+        return DATA_COLUMNS
+
+    @property
+    def col_type(self):
+        if isinstance(self.colname, str):
+            if self.colname in DATA_COLUMNS:
+                return "v."
+            else:
+                return "p."
+        else:
+            return None
+
+    def in_data_columns(self, col):
+        if col in DATA_COLUMNS:
+            return "v." + col
+        else:
+            return "p." + col
+
+    def __add__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                return VE(
+                    "("
+                    + self.col_type
+                    + self.colname
+                    + " + "
+                    + other.col_type
+                    + other.colname
+                    + ")"
+                )
+            else:
+                return VE("(" + self.col_type + self.colname + " + " + str(other) + ")")
+        else:
+            return VE(
+                "(" + self.col_type + self.colname + " + " + str(other.colname) + ")"
+            )
+
+    def __sub__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                return VE(
+                    "("
+                    + self.col_type
+                    + self.colname
+                    + " - "
+                    + other.col_type
+                    + other.colname
+                    + ")"
+                )
+            else:
+                return VE("(" + self.col_type + self.colname + " - " + str(other) + ")")
+        else:
+            return VE(
+                "(" + self.col_type + self.colname + " - " + str(other.colname) + ")"
+            )
+
+    def __mul__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                return VE(
+                    "("
+                    + self.col_type
+                    + self.colname
+                    + " * "
+                    + other.col_type
+                    + other.colname
+                    + ")"
+                )
+            else:
+                return VE("(" + self.col_type + self.colname + " * " + str(other) + ")")
+        else:
+            return VE(
+                "(" + self.col_type + self.colname + " * " + str(other.colname) + ")"
+            )
+
+    def __abs__(self):
+        return VE("(" + f"Math.abs({ self.col_type + self.colname })" + ")")
+
+    def __truediv__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                denominator = other.col_type + other.colname
+            else:
+                denominator = str(other)
+        else:
+            denominator = str(other.colname)
+        initial_str = self.col_type + self.colname + " / " + denominator
+        return VE(denominator + " ? " + '(' + initial_str + ')')
+
+    __floordiv__ = __truediv__
+
+    def __str__(self):
+        return self.col_type + self.colname
+
+
+class VE:
+    def __init__(self, colname):
+        self.colname = colname
+        self.col_type = None
+
+    def __str__(self):
+        return self.colname
+
+    def __add__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                return VE(
+                    "(" + self.colname + " + " + other.col_type + other.colname + ")"
+                )
+            else:
+                return VE("(" + self.colname + " + " + str(other) + ")")
+        else:
+            return VE("(" + self.colname + " + " + str(other.colname) + ")")
+
+    def __sub__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                return VE(
+                    "(" + self.colname + " - " + other.col_type + other.colname + ")"
+                )
+            else:
+                return VE("(" + self.colname + " - " + str(other) + ")")
+        else:
+            return VE("(" + self.colname + " - " + str(other.colname) + ")")
+
+    def __mul__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                return VE(
+                    "(" + self.colname + " * " + other.col_type + other.colname + ")"
+                )
+            else:
+                return VE("(" + self.colname + " * " + str(other) + ")")
+        else:
+            return VE("(" + self.colname + " * " + str(other.colname) + ")")
+
+    def __abs__(self):
+        if self.col_type:
+            return VE("(" + f"Math.abs({ self.col_type + self.colname })" + ")")
+        else:
+            return VE("(" + f"Math.abs({ self.colname[1:-1] })" + ")")
+
+    def __truediv__(self, other):
+        if other.col_type:
+            if isinstance(other, VC):
+                denominator = other.col_type + other.colname
+                initial_str = self.col_type + self.colname + " / " + denominator
+            else:
+                denominator = str(other)
+        else:
+            denominator = str(other.colname)
+            initial_str = self.colname + " / " + denominator
+        if is_number(denominator):
+            return VE('(' + initial_str + ')')
+        else:
+            return VE(denominator + " ? " + '(' + initial_str + ')' + " : 0")
+
+    __floordiv__ = __truediv__
+
+
+class VS:
+    def __init__(self, column, statement, add_or_remove=None):
+        self.statement = statement
+        self.column = column
+        self.add_or_remove = add_or_remove
+        self.divisor=str(self.statement).split('?')[0].strip() if '?' in str(self.statement) else 'aa'
+        self.divisor_parenthesis = self.divisor[0] == '(' and self.divisor[-1] == ')'
+
+    @property
+    def make_statement(self):
+        if self.divisor_parenthesis:
+            return_string = "p." + self.column + self.plus_or_minus(self.statement, self.add_or_remove) + "= " + str(self.statement) + ";"
+        else:
+            if str(self.statement)[0] == '(' and str(self.statement)[-1] == ')':
+                return_string = "p." + self.column + self.plus_or_minus(self.statement, self.add_or_remove) + "= " + str(self.statement)[1:-1] + ";"
+            else:
+                return_string = "p." + self.column + self.plus_or_minus(self.statement, self.add_or_remove) + "= " + str(self.statement) + ";"
+
+        if '?' in return_string:
+            if ':' not in return_string:
+                return_string = return_string[:-1]
+                return_string += ' : 0;'
+
+        return return_string
+
+    def plus_or_minus(self, equation, equation_type=None):
+        plus_or_minus = " "
+        if "v." in str(equation):
+            if equation_type == "add":
+                plus_or_minus = " +"
+            else:
+                plus_or_minus = " -"
+        return plus_or_minus
+
+    def __str__(self):
+        return self.make_statement
+
+
+def plus_or_minus(equation, equation_type):
+    plus_or_minus = ""
+    if "v." in str(equation):
+        if equation_type == "added":
+            plus_or_minus = "+"
+        else:
+            plus_or_minus = "-"
+    return plus_or_minus
+
+
+class VirtualColumn:
+    def __init__(self, col_name, col_value):
+        self.col_name = col_name
+        self.col_value = col_value
+        self.returned_string = f"p.{col_name} += {self.col_value}"
+
+    @property
+    def columns(self):
+        return DATA_COLUMNS
+
+    def __str__(self):
+        return self.returned_string
+
+    def __repr__(self):
+        return f"<VirtualColumn: {self.returned_string}>"
+
+

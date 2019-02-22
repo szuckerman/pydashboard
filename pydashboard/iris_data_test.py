@@ -8,6 +8,7 @@ iris_df = pd.DataFrame(
     data=np.c_[iris["data"], iris["target"]], columns=iris["feature_names"] + ["target"]
 )
 
+
 def name_target(x):
     x = int(x)
     return iris["target_names"][x]

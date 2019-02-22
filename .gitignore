@@ -1,2 +1,3 @@
 .idea/
 pydashboard/__pycache__/
+*.pyc

@@ -1,6 +1,7 @@
 from pydashboard import components as s
 from pydashboard.iris_data_test import iris_df
 from pydashboard.dominate_template import dashboard as t
+
 #
 # pie_chart = s.ChartElement("pie_chart", cls="div_background", height=45)
 # line_chart = s.ChartElement("line_chart", cls="div_background", height=45)
@@ -11,6 +12,6 @@ from pydashboard.dominate_template import dashboard as t
 # item = s.Row(item1, item2)
 # dashboard = s.Dashboard(item1, item2)
 
-dashboard=s.Dashboard(data=iris_df, template=t)
+dashboard = s.Dashboard(data=iris_df, template=t)
 # {'pie_chart': pie_chart}
 dashboard.run_outlines()
