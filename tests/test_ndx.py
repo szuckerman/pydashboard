@@ -26,7 +26,8 @@ from pydashboard.dominate_template import dashboard3 as t
 def compare_strings(s1,s2):
     s1_replaced = str(s1).replace('\n', '').replace(' ', '').replace('\t', '')
     s2_replaced = str(s2).replace('\n', '').replace(' ', '').replace('\t', '')
-    return list(s1_replaced) == list(s2_replaced)
+    return s1_replaced == s2_replaced
+
 
 def test_absgain_VE_string(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
@@ -65,6 +66,11 @@ def test_VE_division_p_col(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
     output = VC('sumIndex') / VC('count')
     assert 'p.count ? (p.sumIndex / p.count)' == str(output)
+
+
+def test_ndx_bubble_chart(monkeypatch):
+    monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
+
 
 
 def test_nameddimension_VC(monkeypatch):
@@ -126,3 +132,92 @@ def test_nameddimension_VC(monkeypatch):
     );'''
 
     assert compare_strings(output, expected)
+
+
+def test_gainOrLossChart(ndx):
+    def gainOrLoss(x):
+        if x < 0:
+            return "Loss"
+        else:
+            return "Gain"
+
+    dat = ndx
+    dat["change"] = dat.close - dat.open
+    dat["gainOrLoss"] = dat.change.apply(gainOrLoss)
+    gainOrLoss_dim = Dimension("gainOrLoss")
+
+    gainOrLossChart = PieChart("gain-loss-chart", gainOrLoss_dim, width=180, height=180, radius=80, inner_radius=40,
+                               renderLabel=True, label=Label("percent", precision=0), transitionDuration=500,
+                               colors=["#3182bd", "#6baed6", "#9ecae1", "#c6dbef", "#dadaeb"], colorDomain= [-1750, 1644],
+                               colorAccessor=True)
+
+    dc_documentation_string = '''
+    var pie_chart_gain_loss_chart = dc.pieChart("#gain-loss-chart")
+            .width(180)
+            .height(180)
+            .radius(80) 
+            .dimension(gainOrLoss_dimension)
+            .group(gainOrLoss_group)
+            .renderLabel(true) 
+            .innerRadius(40) 
+            .transitionDuration(500) 
+            .colors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb']) 
+            .colorDomain([-1750, 1644]) 
+            .colorAccessor(function(d, i){return d.value;});
+
+    pie_chart_gain_loss_chart.label(function (d) {
+                if (pie_chart_gain_loss_chart.hasFilter() && !pie_chart_gain_loss_chart.hasFilter(d.key)) {
+                    return d.key + '(0%)';
+                }
+                var label = d.key;
+                if (all.value()) {
+                    label += '(' + Math.floor(d.value / all.value() * 100)/1 + '%)';
+                }
+                return label;
+            });
+            '''
+
+    gainOrLossChart_replaced = str(gainOrLossChart).replace('\n', '').replace(' ', '').replace('\t', '')
+    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+
+    assert gainOrLossChart_replaced == dc_documentation_string_replaced
+
+
+def test_dayOfWeekChart(ndx):
+
+    def day_of_week(x):
+        y = pd.to_datetime(x)
+        return day_list[y.dayofweek]
+
+    dat = ndx
+
+    day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+
+    dat["day_of_week"] = dat.date.apply(day_of_week)
+    day_of_week_dim = Dimension("day_of_week")
+    row_chart = RowChart("day-of-week-chart", day_of_week_dim, elasticX=True, height=180, width=180, xAxis="ticks(4)", label=Label("key"))
+
+    dc_documentation_string = '''
+        var row_chart_day_of_week_chart = dc.rowChart("#day-of-week-chart")
+            .width(180)
+            .height(180)
+            .margins({top: 20, left: 10, right: 10, bottom: 20})
+            .group(day_of_week_group)
+            .dimension(day_of_week_dimension)
+            .ordinalColors(['#3182bd', '#6baed6', '#9ecae1', '#c6dbef', '#dadaeb'])
+            .title(function (d) {
+                return d.value;
+            })
+            .elasticX(true);
+            
+        row_chart_day_of_week_chart.xAxis().ticks(4);
+        
+        row_chart_day_of_week_chart.label(function (d) {
+                return d.key[0];
+            });
+    '''
+
+    row_chart_replaced = str(row_chart).replace('\n', '').replace(' ', '').replace('\t', '')
+    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+
+    assert row_chart_replaced == dc_documentation_string_replaced

@@ -84,51 +84,52 @@ pie_chart2 = BarChart(
 
 row_chart = RowChart("B", day_of_week_dim, elasticX=True, height=350, xAxis="ticks(4)")
 
-
+dashboard = s.Dashboard(data=dat, template=t)
 
 absGain_eq = (VC("close") - VC("open")) * VC(100)
 fluctuation_eq = abs(VC('close') - VC('open'))
 sumIndex_eq = (VC('open') + VC('close')) / VC(2)
 avgIndex_eq = VC('sumIndex') / VC('count')
 percentageGain_eq = (VC('absGain') / VC('avgIndex')) * VC(100)
-fluctuationPercentage_eq = (VC('fluctuation') / VC('avgIndex')) * VC(100)
+fluctuationPercentage_eq = (VC('fluctuation2') / VC('avgIndex')) * VC(100)
 
 absGain = VS('absGain', absGain_eq)
-fluctuation = VS('fluctuation', fluctuation_eq)
+fluctuation2 = VS('fluctuation2', fluctuation_eq)
 sumIndex = VS('sumIndex', sumIndex_eq)
 avgIndex = VS('avgIndex', avgIndex_eq)
 percentageGain = VS('percentageGain', percentageGain_eq)
 fluctuationPercentage = VS('fluctuationPercentage', fluctuationPercentage_eq)
 
-columns = [absGain, fluctuation, sumIndex, avgIndex, percentageGain, fluctuationPercentage]
-
+columns = [absGain, fluctuation2, sumIndex, avgIndex, percentageGain, fluctuationPercentage]
 
 named_dim = NamedDimension(columns, groupby="year")
 
-str(fluctuation.statement)
+str(fluctuation2.statement)
 str(fluctuation_eq)
 str(absGain_eq)
 str(avgIndex_eq)
 
+str(absGain_eq)
+
 named_dim.reduce_group_code
 
-
 bub_params = {
-    "width": 400,
-    "height": 750,
+    "width": 990,
+    "height": 250,
     "x": True,
     "y": True,
     "r": True,
     "colorAccessor": "absGain",
     "keyAccessor": "absGain",
-    "valueAccessor": "absGain",
-    "radiusValueAccessor": "fluctuationPercentage",
+    "valueAccessor": "percentageGain",
+    "radiusValueAccessor": "fluctuationPercentage"
 }
 
 bub = BubbleChart("C", named_dim, **bub_params)
 str(bub)
+str(named_dim)
 
-dashboard = s.Dashboard(pie_chart1, pie_chart2, bub, data=dat, template=t)
+dashboard.add_graphs(pie_chart1, pie_chart2, bub)
 
 # dashboard.view_outlines()
 dashboard.view()

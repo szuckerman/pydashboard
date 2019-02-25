@@ -18,6 +18,8 @@ GLOBAL_JS_CODE = []
 GLOBAL_DIMENSION_CODE = []
 DATA_COLUMNS = set()
 
+def string_join(list_name):
+    return ''.join(str(i) for i in list_name)
 
 def hello_world(x):
     return "hello %s!" % x
@@ -184,18 +186,22 @@ class Dashboard:
     def __init__(self, *items, data=pd.DataFrame(), template=None):
         global DATA_COLUMNS
         self.data = data
-        self.items = items
+        if items:
+            self.add_graphs(*items)
         self.template = template
-        self.html = div(self.item_str, {"class": "container"})
         self.outline_html = None
-        GLOBAL_JS_CODE = [str(item) for item in self.items]
         if not data.empty:
             DATA_COLUMNS.update(set(data.columns))
-        self.global_js_code = "\n".join(GLOBAL_JS_CODE)
 
     def add_template(self, *items):
         item_str = [raw(str(item)) for item in items]
         self.outline_html = div(item_str, {"class": "container"})
+
+    def add_graphs(self, *items):
+        self.items = items
+        GLOBAL_JS_CODE = [str(item) for item in self.items]
+        self.global_js_code = "\n".join(GLOBAL_JS_CODE)
+        self.html = div(self.item_str, {"class": "container"})
 
     @property
     def item_str(self):
@@ -851,140 +857,128 @@ class VC:
         if other.col_type:
             if isinstance(other, VC):
                 return VE(
-                    "("
-                    + self.col_type
-                    + self.colname
-                    + " + "
-                    + other.col_type
-                    + other.colname
-                    + ")"
+                    ["(",
+                    self.col_type,
+                    self.colname,
+                    " + ",
+                    other.col_type,
+                    other.colname,
+                    ")"]
                 )
             else:
-                return VE("(" + self.col_type + self.colname + " + " + str(other) + ")")
+                return VE(["(", self.col_type, self.colname, " + ", other, ")"])
         else:
-            return VE(
-                "(" + self.col_type + self.colname + " + " + str(other.colname) + ")"
-            )
+            return VE(["(", self.col_type, self.colname, " + ", other.colname, ")"])
 
     def __sub__(self, other):
         if other.col_type:
             if isinstance(other, VC):
-                return VE(
-                    "("
-                    + self.col_type
-                    + self.colname
-                    + " - "
-                    + other.col_type
-                    + other.colname
-                    + ")"
+                return VE([
+                    "(",
+                    self.col_type,
+                    self.colname,
+                    " - ",
+                    other.col_type,
+                    other.colname,
+                    ")"]
                 )
             else:
-                return VE("(" + self.col_type + self.colname + " - " + str(other) + ")")
+                return VE(["(", self.col_type, self.colname, " - ", other, ")"])
         else:
             return VE(
-                "(" + self.col_type + self.colname + " - " + str(other.colname) + ")"
+                ["(", self.col_type, self.colname, " - ", other.colname, ")"]
             )
 
     def __mul__(self, other):
         if other.col_type:
             if isinstance(other, VC):
-                return VE(
-                    "("
-                    + self.col_type
-                    + self.colname
-                    + " * "
-                    + other.col_type
-                    + other.colname
-                    + ")"
-                )
+                return VE(["(", self.col_type, self.colname, " * ", other.col_type, other.colname, ")"])
             else:
-                return VE("(" + self.col_type + self.colname + " * " + str(other) + ")")
+                return VE(["(", self.col_type, self.colname, " * ", other, ")"])
         else:
-            return VE(
-                "(" + self.col_type + self.colname + " * " + str(other.colname) + ")"
-            )
+            return VE(["(", self.col_type, self.colname, " * ", other.colname, ")"])
 
     def __abs__(self):
-        return VE("(" + f"Math.abs({ self.col_type + self.colname })" + ")")
+        return VE(["(", 'Math.abs({', self.col_type, self.colname, ")", ")"])
 
     def __truediv__(self, other):
         if other.col_type:
             if isinstance(other, VC):
-                denominator = other.col_type + other.colname
+                denominator = [other.col_type, other.colname]
             else:
-                denominator = str(other)
+                denominator = [other]
         else:
-            denominator = str(other.colname)
-        initial_str = self.col_type + self.colname + " / " + denominator
-        return VE(denominator + " ? " + '(' + initial_str + ')')
+            denominator = [other.colname]
+        initial_str = [self.col_type, self.colname, " / "] + denominator
+        return VE(denominator + [" ? " , '(']  + initial_str + [')'])
 
     __floordiv__ = __truediv__
 
     def __str__(self):
-        return self.col_type + self.colname
+        return string_join((self.col_type, self.colname))
 
 
 class VE:
-    def __init__(self, colname):
+    def __init__(self, vc_list, colname=None):
+        self.vc_list = vc_list
         self.colname = colname
         self.col_type = None
 
     def __str__(self):
-        return self.colname
+        return string_join(self.vc_list)
 
     def __add__(self, other):
         if other.col_type:
             if isinstance(other, VC):
                 return VE(
-                    "(" + self.colname + " + " + other.col_type + other.colname + ")"
+                    ["(", *self.vc_list, " + ", other.col_type, other.colname, ")"]
                 )
             else:
-                return VE("(" + self.colname + " + " + str(other) + ")")
+                return VE(["(", *self.vc_list, " + ", other, ")"])
         else:
-            return VE("(" + self.colname + " + " + str(other.colname) + ")")
+            return VE(["(", *self.vc_list, " + ", other.colname, ")"])
 
     def __sub__(self, other):
         if other.col_type:
             if isinstance(other, VC):
                 return VE(
-                    "(" + self.colname + " - " + other.col_type + other.colname + ")"
+                    ["(" , *self.vc_list , " - " , other.col_type , other.colname , ")"]
                 )
             else:
-                return VE("(" + self.colname + " - " + str(other) + ")")
+                return VE(["(", *self.vc_list, " - ", other, ")"])
         else:
-            return VE("(" + self.colname + " - " + str(other.colname) + ")")
+            return VE(["(", *self.vc_list, " - ", other.colname, ")"])
 
     def __mul__(self, other):
         if other.col_type:
             if isinstance(other, VC):
                 return VE(
-                    "(" + self.colname + " * " + other.col_type + other.colname + ")"
+                    ["(", *self.vc_list, " * ", other.col_type, other.colname, ")"]
                 )
             else:
-                return VE("(" + self.colname + " * " + str(other) + ")")
+                return VE(["(", *self.vc_list, " * ", other, ")"])
         else:
-            return VE("(" + self.colname + " * " + str(other.colname) + ")")
+            return VE(["(", *self.vc_list, " * ", other.colname, ")"])
 
     def __abs__(self):
         if self.col_type:
-            return VE("(" + f"Math.abs({ self.col_type + self.colname })" + ")")
+            return VE(["(", "Math.abs(", self.col_type, *self.vc_list, ")", ")"])
         else:
-            return VE("(" + f"Math.abs({ self.colname[1:-1] })" + ")")
+            return VE(["(", "Math.abs(", *self.vc_list[1:-1], ")", ")"])
 
     def __truediv__(self, other):
         if other.col_type:
             if isinstance(other, VC):
-                denominator = other.col_type + other.colname
-                initial_str = self.col_type + self.colname + " / " + denominator
+                denominator = [other.col_type, other.colname]
             else:
-                denominator = str(other)
+                denominator = [other]
         else:
-            denominator = str(other.colname)
-            initial_str = self.colname + " / " + denominator
-        if is_number(denominator):
-            return VE('(' + initial_str + ')')
+            denominator = [other.colname]
+        initial_str = self.vc_list + [" / "] + denominator
+        if is_number(string_join(denominator)):
+            return VE(['('] + initial_str + [')'])
         else:
-            return VE(denominator + " ? " + '(' + initial_str + ')' + " : 0")
+            return VE(denominator + [" ? ", '('] + initial_str + [')', " : 0"])
 
     __floordiv__ = __truediv__
 
