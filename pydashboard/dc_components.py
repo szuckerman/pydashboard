@@ -124,6 +124,8 @@ class BarChart(StackMixin):
         centerBar=None,
         gap=None,
         outerPadding=None,
+        xAxis=None,
+        yAxis=None,
         *args,
         **kwargs,
     ):
@@ -135,29 +137,17 @@ class BarChart(StackMixin):
         self.centerBar = centerBar
         self.gap = gap
         self.outerPadding = outerPadding
+        self.xAxis = xAxis
+        self.yAxis = yAxis
 
     @property
     def js_chart_code(self):
         dimension_string_list = [
-            f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")',
-            f".dimension({self.dimension.dimension_name})",
-            f".group({self.dimension.group_name})",
-        ]
+            f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")']
 
-        axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
+        x_axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
+        y_axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
         margin_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
-
-        if self.elasticY:
-            dimension_string_list.append(f".elasticY(true)")
-
-        if self.centerBar:
-            dimension_string_list.append(f".centerBar(true)")
-
-        if self.alwaysUseRounding:
-            dimension_string_list.append(f".alwaysUseRounding(true)")
-
-        if self.gap:
-            dimension_string_list.append(f".gap({self.gap})")
 
         if self.width:
             dimension_string_list.append(f".width({self.width})")
@@ -165,10 +155,46 @@ class BarChart(StackMixin):
         if self.height:
             dimension_string_list.append(f".height({self.height})")
 
-        axis_string_list.append(f".x(d3.scaleLinear().domain([-25, 25]))")
+        dimension_string_list.append(".margins({top: 10, right: 50, bottom: 30, left: 40})")
+        dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
+        dimension_string_list.append(f".group({self.dimension.group_name})")
+
+        if self.elasticY:
+            dimension_string_list.append(f".elasticY(true)")
+
+        if self.centerBar:
+            dimension_string_list.append(f".centerBar(true)")
+
+        if self.gap:
+            dimension_string_list.append(f".gap({self.gap})")
+
+        dimension_string_list.append(".round(dc.round.floor)")
+
+        if self.alwaysUseRounding:
+            dimension_string_list.append(f".alwaysUseRounding(true)")
+
+        dimension_string_list.append(f".renderHorizontalGridLines(true)")
+
+        dimension_string_list.append(f".x(d3.scaleLinear().domain([-25, 25]))")
+
+        dimension_string_list.append('''
+                .filterPrinter(function (filters) {
+            var filter = filters[0], s = '';
+            s += numberFormat(filter[0]) + '% -> ' + numberFormat(filter[1]) + '%';
+            return s;
+        })
+        ''')
+
+        if self.xAxis:
+            x_axis_string_list.append(f".xAxis().{self.xAxis}")
+
+        if self.yAxis:
+            y_axis_string_list.append(f".yAxis().{self.yAxis}")
 
         DIMENSION_FINAL = DIMENSION_SPACING.join(dimension_string_list) + ";"
-        AXIS_FINAL = DIMENSION_SPACING.join(axis_string_list) + ";"
+        X_AXIS_FINAL = DIMENSION_SPACING.join(x_axis_string_list) + ";" if len(x_axis_string_list) > 1 else ''
+        Y_AXIS_FINAL = DIMENSION_SPACING.join(y_axis_string_list) + ";" if len(y_axis_string_list) > 1 else ''
+        AXES_FINAL = X_AXIS_FINAL + DIMENSION_SPACING + Y_AXIS_FINAL
 
         if self.margin_left:
             margin_string_list.append(f".margins().left = {self.margin_left}")
@@ -186,10 +212,10 @@ class BarChart(StackMixin):
             (self.margin_left, self.margin_right, self.margin_top, self.margin_bottom)
         ):
             MARGIN_FINAL = DIMENSION_SPACING.join(margin_string_list) + ";"
-            return DIMENSION_FINAL + "\n" + AXIS_FINAL + "\n" + MARGIN_FINAL
+            return DIMENSION_FINAL + "\n" + AXES_FINAL + "\n" + MARGIN_FINAL
 
         else:
-            return DIMENSION_FINAL + "\n" + AXIS_FINAL
+            return DIMENSION_FINAL + "\n" + AXES_FINAL
 
     def __str__(self):
         return self.js_chart_code
@@ -296,7 +322,6 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
         titleLabelOffsetX=None,
         x=None,
         xAxis=None,
-        # xAxis=None,
         *args,
         **kwargs,
     ):
@@ -313,7 +338,6 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
         self.titleLabelOffsetX = titleLabelOffsetX
         self.x = x
         self.xAxis = xAxis
-        # self.xAxis()
 
     @property
     def js_chart_code(self):
@@ -494,12 +518,11 @@ class PieChart(CapMixin, ColorMixin):
 
         if self.label:
             self.label.chart_name = self.name_replaced
-            if self.label.label_type == "percent":
-                return (
+            return (
                     DIMENSION_SPACING.join(dimension_string_list)
-                    + ";"
-                    + self.label.percent
-                )
+                    + ";" +
+                getattr(self.label, self.label.label_type)
+            )
 
         return DIMENSION_SPACING.join(dimension_string_list) + ";"
 
@@ -537,7 +560,7 @@ class Label:
     def percent(self):
         printed_precision = "0" * self.precision
 
-        func_name = f""".label(function(d){{
+        func_name = f"""{self.chart_name}.label(function(d){{
             if ({self.chart_name}.hasFilter() && !{self.chart_name}.hasFilter(d.key)) {{
                 return d.key + ' (0%)';
             }}
@@ -548,8 +571,7 @@ class Label:
             return label;
             }});"""
 
-        return self.chart_name + DIMENSION_SPACING + func_name
-
+        return func_name
 
     @property
     def key(self):

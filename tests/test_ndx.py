@@ -221,3 +221,49 @@ def test_dayOfWeekChart(ndx):
     dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
 
     assert row_chart_replaced == dc_documentation_string_replaced
+
+
+def test_fluctuationChart(ndx):
+    dat = ndx
+
+    dat["fluctuation"] = np.round((dat.close - dat.open) / dat.open * 100)
+
+    fluctuation_dim = Dimension("fluctuation")
+
+    fluctuation_chart = BarChart("volume-month-chart", fluctuation_dim, width=420,
+        height=180, elasticY=True, gap=1, centerBar=True, alwaysUseRounding=True,
+                                 xAxis="tickFormat(function(v){return v+'%';})", yAxis='ticks(5)'
+    )
+
+    dc_documentation_string = '''
+    var bar_chart_volume_month_chart = dc.barChart("#volume-month-chart")
+        .width(420)
+        .height(180)
+        .margins({top: 10, right: 50, bottom: 30, left: 40})
+        .dimension(fluctuation_dimension)
+        .group(fluctuation_group)
+        .elasticY(true)
+        .centerBar(true)
+        .gap(1)
+        .round(dc.round.floor)
+        .alwaysUseRounding(true)
+        .renderHorizontalGridLines(true)
+        .x(d3.scaleLinear().domain([-25, 25]))
+        .filterPrinter(function (filters) {
+            var filter = filters[0], s = '';
+            s += numberFormat(filter[0]) + '% -> ' + numberFormat(filter[1]) + '%';
+            return s;
+        });
+        
+    bar_chart_volume_month_chart.xAxis().tickFormat(
+        function (v) { return v + '%'; });
+    
+    bar_chart_volume_month_chart.yAxis().ticks(5);
+    '''
+
+    row_chart_replaced = str(fluctuation_chart).replace('\n', '').replace(' ', '').replace('\t', '')
+    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+
+    assert row_chart_replaced == dc_documentation_string_replaced
+
+
