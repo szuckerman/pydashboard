@@ -25,7 +25,7 @@ dat = pd.read_csv(
     "/Users/zucks/PycharmProjects/pydashboard/pydashboard/example_data/ndx.csv"
 )
 
-
+dat.columns
 dat["change"] = dat.close - dat.open
 
 dat.head()

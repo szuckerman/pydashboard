@@ -646,9 +646,10 @@ class NamedDimension2:
 
 
 class NamedDimension:
-    def __init__(self, columns=None, groupby=None):
+    def __init__(self, columns=None, groupby=None, group_text=None):
 
         self.columns = columns
+        self.group_text = group_text
 
         if isinstance(groupby, list):
             self.dim_replaced = [
@@ -965,6 +966,12 @@ class VE:
             return VE(["(", "Math.abs(", self.col_type, *self.vc_list, ")", ")"])
         else:
             return VE(["(", "Math.abs(", *self.vc_list[1:-1], ")", ")"])
+
+    def __round__(self):
+        if self.col_type:
+            return VE(["(", "Math.round(", self.col_type, *self.vc_list, ")", ")"])
+        else:
+            return VE(["(", "Math.round(", *self.vc_list[1:-1], ")", ")"])
 
     def __truediv__(self, other):
         if other.col_type:

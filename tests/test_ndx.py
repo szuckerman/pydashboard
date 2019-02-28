@@ -20,7 +20,7 @@ from pydashboard.dc_components import (
     BarChart,
     Label,
     BubbleChart,
-)
+    LineChart)
 from pydashboard.dominate_template import dashboard3 as t
 
 def compare_strings(s1,s2):
@@ -266,4 +266,66 @@ def test_fluctuationChart(ndx):
 
     assert row_chart_replaced == dc_documentation_string_replaced
 
+
+def test_moveChart(monkeypatch, ndx):
+    monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
+
+    dat = ndx
+
+    def get_month(x):
+        return x.month
+
+    dat["month"] = pd.to_datetime(dat.date)
+    dat["month"] = dat.month.apply(get_month)
+
+    total_eq = (VC('open') + VC('close')) / VC(2)
+    total = VS('total', total_eq)
+
+    avg_eq = round(VC('total') / VC('count'))
+    avg = VS('avg', avg_eq)
+
+    eqs = [total, avg]
+
+    move_months_dim = NamedDimension(eqs, groupby=['month'], group_text='Monthly Index Average')
+
+    line_chart = LineChart("monthly-move-chart", move_months_dim, width=990, height=200, valueAccessor='avg')
+
+    dc_documentation_string = '''
+    var line_chart_monthly_move_chart = dc.lineChart("#monthly-move-chart")
+        .renderArea(true)
+        .width(990)
+        .height(200)
+        .transitionDuration(1000)
+        .margins({top: 30, right: 50, bottom: 25, left: 40})
+        .dimension(month_dimension)
+        .mouseZoomable(true)
+        .rangeChart(volumeChart)
+        .x(d3.scaleTime().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)]))
+        .round(d3.timeMonth.round)
+        .xUnits(d3.timeMonths)
+        .elasticY(true)
+        .renderHorizontalGridLines(true)
+        .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
+        .brushOn(false) 
+        .group(month_group, 'Monthly Index Average')
+        .valueAccessor(function (d) {
+            return d.value.avg;
+        }) 
+        .stack(monthlyMoveGroup, 'Monthly Index Move', function (d) {
+            return d.value;
+        })
+        .title(function (d) {
+            var value = d.value.avg ? d.value.avg : d.value;
+            if (isNaN(value)) {
+                value = 0;
+            }
+            return dateFormat(d.key) + '\n' + numberFormat(value);
+        });
+    '''
+
+
+    line_chart_replaced = str(line_chart).replace('\n', '').replace(' ', '').replace('\t', '')
+    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+
+    assert line_chart_replaced == dc_documentation_string_replaced
 

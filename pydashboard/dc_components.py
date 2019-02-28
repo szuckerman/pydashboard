@@ -675,3 +675,74 @@ class BubbleChart(BubbleMixin, CoordinateGridMixin):
 
     def __repr__(self):
         return f'<BubbleChart: "#{self.name}">'
+
+
+class LineChart(StackMixin):
+    def __init__(self, name, dimension, transitionDuration=1000, elasticY=True,
+                 renderHorizontalGridLines=True, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.name = name
+        self.dimension = dimension
+        self.transitionDuration = transitionDuration
+        self.elasticY = elasticY
+        self.renderHorizontalGridLines = renderHorizontalGridLines
+
+    @property
+    def js_chart_code(self):
+        dimension_string_list = [
+            f'var line_chart_{self.name.replace("-", "_")} = dc.lineChart("#{self.name}")'
+        ]
+
+        dimension_string_list.append(f".renderArea(true)")
+
+        if self.width:
+            dimension_string_list.append(f".width({self.width})")
+
+        if self.height:
+            dimension_string_list.append(f".height({self.height})")
+
+        if self.transitionDuration:
+            dimension_string_list.append(f".transitionDuration({self.transitionDuration})")
+
+        dimension_string_list.append(f".margins({{top:30,right:50,bottom:25,left:40}})")
+        dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
+        dimension_string_list.append(f".mouseZoomable(true)")
+        dimension_string_list.append(f".rangeChart(volumeChart)")
+        dimension_string_list.append(f".x(d3.scaleTime().domain([newDate(1985,0,1),newDate(2012,11,31)]))")
+
+        dimension_string_list.append(f".round(d3.timeMonth.round)")
+        dimension_string_list.append(f".xUnits(d3.timeMonths)")
+
+        if self.elasticY:
+            dimension_string_list.append(".elasticY(true)")
+
+        if self.renderHorizontalGridLines:
+            dimension_string_list.append(f".renderHorizontalGridLines(true)")
+
+        dimension_string_list.append(f".legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))")
+        dimension_string_list.append(f".brushOn(false)")
+
+        if self.dimension.group_text:
+            dimension_string_list.append(f".group({self.dimension.group_name}, '{self.dimension.group_text}')")
+        else:
+            dimension_string_list.append(f".group({self.dimension.group_name})")
+
+        if self.valueAccessor:
+            dimension_string_list.append(
+                f".valueAccessor(function(d){{return d.value.{self.valueAccessor};}})"
+            )
+
+        dimension_string_list.append(f".stack(monthlyMoveGroup,'MonthlyIndexMove', function(d) {{return d.value;}})")
+        dimension_string_list.append('''.title(function (d) {
+            var value = d.value.avg ? d.value.avg : d.value;
+            if (isNaN(value)) {
+                value = 0;
+            }
+            return dateFormat(d.key) + '\n' + numberFormat(value);
+        })''')
+
+        return DIMENSION_SPACING.join(dimension_string_list) + ";"
+
+    def __str__(self):
+        return self.js_chart_code
+
