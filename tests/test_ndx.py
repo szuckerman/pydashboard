@@ -407,49 +407,46 @@ def test_moveChart(monkeypatch, ndx):
 
 
 class TestBarChartAttributes:
-
     def test_has_name(self, bar_chart):
-        assert hasattr(bar_chart, 'name')
+        assert hasattr(bar_chart, "name")
 
     def test_has_dimension(self, bar_chart):
-        assert hasattr(bar_chart, 'dimension')
+        assert hasattr(bar_chart, "dimension")
 
     def test_has_alwaysUseRounding(self, bar_chart):
-        assert hasattr(bar_chart, 'alwaysUseRounding')
+        assert hasattr(bar_chart, "alwaysUseRounding")
 
     def test_has_barPadding(self, bar_chart):
-        assert hasattr(bar_chart, 'barPadding')
+        assert hasattr(bar_chart, "barPadding")
 
     def test_has_centerBar(self, bar_chart):
-        assert hasattr(bar_chart, 'centerBar')
+        assert hasattr(bar_chart, "centerBar")
 
     def test_has_gap(self, bar_chart):
-        assert hasattr(bar_chart, 'gap')
+        assert hasattr(bar_chart, "gap")
 
     def test_has_outerPadding(self, bar_chart):
-        assert hasattr(bar_chart, 'outerPadding')
+        assert hasattr(bar_chart, "outerPadding")
 
     def test_has_xAxis(self, bar_chart):
-        assert hasattr(bar_chart, 'xAxis')
+        assert hasattr(bar_chart, "xAxis")
 
     def test_has_yAxis(self, bar_chart):
-        assert hasattr(bar_chart, 'yAxis')
+        assert hasattr(bar_chart, "yAxis")
 
 
 class TestLineChartAttributes:
-
     def test_has_name(self, line_chart):
-        assert hasattr(line_chart, 'name')
+        assert hasattr(line_chart, "name")
 
     def test_has_dimension(self, line_chart):
-        assert hasattr(line_chart, 'dimension')
+        assert hasattr(line_chart, "dimension")
 
     def test_has_transitionDuration(self, line_chart):
-        assert hasattr(line_chart, 'transitionDuration')
+        assert hasattr(line_chart, "transitionDuration")
 
     def test_has_elasticY(self, line_chart):
-        assert hasattr(line_chart, 'elasticY')
+        assert hasattr(line_chart, "elasticY")
 
     def test_has_renderHorizontalGridLines(self, line_chart):
-        assert hasattr(line_chart, 'renderHorizontalGridLines')
-
+        assert hasattr(line_chart, "renderHorizontalGridLines")

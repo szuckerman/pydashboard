@@ -11,6 +11,7 @@ from pydashboard.dc_components import BarChart, LineChart
 def ndx():
     return pd.read_csv("../pydashboard/example_data/ndx.csv")
 
+
 @pytest.fixture
 def bar_chart(ndx):
     dat = ndx
