@@ -404,3 +404,33 @@ def test_moveChart(monkeypatch, ndx):
     )
 
     assert line_chart_replaced == dc_documentation_string_replaced
+
+
+class TestBarChartAttributes:
+
+    def test_has_name(self, bar_chart):
+        assert hasattr(bar_chart, 'name')
+
+    def test_has_dimension(self, bar_chart):
+        assert hasattr(bar_chart, 'dimension')
+
+    def test_has_alwaysUseRounding(self, bar_chart):
+        assert hasattr(bar_chart, 'alwaysUseRounding')
+
+    def test_has_barPadding(self, bar_chart):
+        assert hasattr(bar_chart, 'barPadding')
+
+    def test_has_centerBar(self, bar_chart):
+        assert hasattr(bar_chart, 'centerBar')
+
+    def test_has_gap(self, bar_chart):
+        assert hasattr(bar_chart, 'gap')
+
+    def test_has_outerPadding(self, bar_chart):
+        assert hasattr(bar_chart, 'outerPadding')
+
+    def test_has_xAxis(self, bar_chart):
+        assert hasattr(bar_chart, 'xAxis')
+
+    def test_has_yAxis(self, bar_chart):
+        assert hasattr(bar_chart, 'yAxis')
