@@ -1,3 +1,5 @@
 .idea/
 pydashboard/__pycache__/
 *.pyc
+tests/htmlcov/
+tests/.coverage

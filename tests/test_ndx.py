@@ -434,3 +434,22 @@ class TestBarChartAttributes:
 
     def test_has_yAxis(self, bar_chart):
         assert hasattr(bar_chart, 'yAxis')
+
+
+class TestLineChartAttributes:
+
+    def test_has_name(self, line_chart):
+        assert hasattr(line_chart, 'name')
+
+    def test_has_dimension(self, line_chart):
+        assert hasattr(line_chart, 'dimension')
+
+    def test_has_transitionDuration(self, line_chart):
+        assert hasattr(line_chart, 'transitionDuration')
+
+    def test_has_elasticY(self, line_chart):
+        assert hasattr(line_chart, 'elasticY')
+
+    def test_has_renderHorizontalGridLines(self, line_chart):
+        assert hasattr(line_chart, 'renderHorizontalGridLines')
+
