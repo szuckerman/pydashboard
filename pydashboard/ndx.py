@@ -87,20 +87,27 @@ row_chart = RowChart("B", day_of_week_dim, elasticX=True, height=350, xAxis="tic
 dashboard = s.Dashboard(data=dat, template=t)
 
 absGain_eq = (VC("close") - VC("open")) * VC(100)
-fluctuation_eq = abs(VC('close') - VC('open'))
-sumIndex_eq = (VC('open') + VC('close')) / VC(2)
-avgIndex_eq = VC('sumIndex') / VC('count')
-percentageGain_eq = (VC('absGain') / VC('avgIndex')) * VC(100)
-fluctuationPercentage_eq = (VC('fluctuation2') / VC('avgIndex')) * VC(100)
+fluctuation_eq = abs(VC("close") - VC("open"))
+sumIndex_eq = (VC("open") + VC("close")) / VC(2)
+avgIndex_eq = VC("sumIndex") / VC("count")
+percentageGain_eq = (VC("absGain") / VC("avgIndex")) * VC(100)
+fluctuationPercentage_eq = (VC("fluctuation2") / VC("avgIndex")) * VC(100)
 
-absGain = VS('absGain', absGain_eq)
-fluctuation2 = VS('fluctuation2', fluctuation_eq)
-sumIndex = VS('sumIndex', sumIndex_eq)
-avgIndex = VS('avgIndex', avgIndex_eq)
-percentageGain = VS('percentageGain', percentageGain_eq)
-fluctuationPercentage = VS('fluctuationPercentage', fluctuationPercentage_eq)
+absGain = VS("absGain", absGain_eq)
+fluctuation2 = VS("fluctuation2", fluctuation_eq)
+sumIndex = VS("sumIndex", sumIndex_eq)
+avgIndex = VS("avgIndex", avgIndex_eq)
+percentageGain = VS("percentageGain", percentageGain_eq)
+fluctuationPercentage = VS("fluctuationPercentage", fluctuationPercentage_eq)
 
-columns = [absGain, fluctuation2, sumIndex, avgIndex, percentageGain, fluctuationPercentage]
+columns = [
+    absGain,
+    fluctuation2,
+    sumIndex,
+    avgIndex,
+    percentageGain,
+    fluctuationPercentage,
+]
 
 named_dim = NamedDimension(columns, groupby="year")
 
@@ -122,7 +129,7 @@ bub_params = {
     "colorAccessor": "absGain",
     "keyAccessor": "absGain",
     "valueAccessor": "percentageGain",
-    "radiusValueAccessor": "fluctuationPercentage"
+    "radiusValueAccessor": "fluctuationPercentage",
 }
 
 bub = BubbleChart("C", named_dim, **bub_params)
@@ -144,32 +151,35 @@ sumIndex + open
 abs(open)
 
 absGain_eq = (VC("close") - VC("open")) * VC(100)
-fluctuation_eq = abs(VC('close') - VC('open'))
-sumIndex_eq = (VC('open') + VC('close'))/VC(2)
-avgIndex_eq = VC('sumIndex')/VC('count')
-percentageGain_eq = (VC('absGain') /VC('avgIndex')) * VC(100)
-fluctuationPercentage_eq = (VC('fluctuation') /VC('avgIndex')) * VC(100)
+fluctuation_eq = abs(VC("close") - VC("open"))
+sumIndex_eq = (VC("open") + VC("close")) / VC(2)
+avgIndex_eq = VC("sumIndex") / VC("count")
+percentageGain_eq = (VC("absGain") / VC("avgIndex")) * VC(100)
+fluctuationPercentage_eq = (VC("fluctuation") / VC("avgIndex")) * VC(100)
 
 str(absGain_eq)
 
-my_dict = { 'absGain': absGain_eq,
-'fluctuation': fluctuation_eq,
-'sumIndex': sumIndex_eq,
-'avgIndex': avgIndex_eq,
-'percentageGain': percentageGain_eq,
-'fluctuationPercentage': fluctuationPercentage_eq}
+my_dict = {
+    "absGain": absGain_eq,
+    "fluctuation": fluctuation_eq,
+    "sumIndex": sumIndex_eq,
+    "avgIndex": avgIndex_eq,
+    "percentageGain": percentageGain_eq,
+    "fluctuationPercentage": fluctuationPercentage_eq,
+}
 
 s.DATA_COLUMNS = {"open", "close"}
 
 for k, v in my_dict.items():
-    if isinstance(v, VE) and '/' not in str(v):
+    if isinstance(v, VE) and "/" not in str(v):
         print("p.{k} += {v};".format(k=k, v=str(v)[1:-1]))
     else:
         print("p.{k} += {v};".format(k=k, v=str(v)))
 
 my_dict.keys()
 
-sam=NamedDimension(columns = my_dict, groupby=['year'])
+sam = NamedDimension(columns=my_dict, groupby=["year"])
 
 from pprint import pprint as pp
+
 pp(sam.reduce_group_code)

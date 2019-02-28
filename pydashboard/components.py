@@ -18,19 +18,24 @@ GLOBAL_JS_CODE = []
 GLOBAL_DIMENSION_CODE = []
 DATA_COLUMNS = set()
 
+
 def string_join(list_name):
-    return ''.join(str(i) for i in list_name)
+    return "".join(str(i) for i in list_name)
+
 
 def hello_world(x):
     return "hello %s!" % x
 
+
 def is_number(s):
-    '''From: https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float'''
+    """From: https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float"""
     try:
         float(s)
         return True
     except ValueError:
         return False
+
+
 # class Row:
 #     def __init__(self, *args):
 #         self.children = args
@@ -550,21 +555,29 @@ class NamedDimension2:
         if isinstance(self.columns, dict):
             col_added = []
             for k, v in self.columns.items():
-                has_division = ''
+                has_division = ""
                 if isinstance(v, VE):
-                    if '/' in v.colname:
+                    if "/" in v.colname:
                         has_division = " : 0"
-                    col_added.append("p.{k} += {v}{has_division};".format(k=k, v=str(v)[1:-1], has_division=has_division))
+                    col_added.append(
+                        "p.{k} += {v}{has_division};".format(
+                            k=k, v=str(v)[1:-1], has_division=has_division
+                        )
+                    )
                 else:
                     col_added.append("p.{k} += {v};".format(k=k, v=str(v)))
 
             col_removed = []
             for k, v in self.columns.items():
-                has_division = ''
+                has_division = ""
                 if isinstance(v, VE):
-                    if '/' in v.colname:
+                    if "/" in v.colname:
                         has_division = " : 0"
-                    col_removed.append("p.{k} -= {v}{has_division};".format(k=k, v=str(v)[1:-1], has_division=has_division))
+                    col_removed.append(
+                        "p.{k} -= {v}{has_division};".format(
+                            k=k, v=str(v)[1:-1], has_division=has_division
+                        )
+                    )
                 else:
                     col_removed.append("p.{k} -= {v};".format(k=k, v=str(v)))
 
@@ -680,11 +693,11 @@ class NamedDimension:
     def reduce_group_code(self):
 
         for col in self.columns:
-            col.add_or_remove = 'add'
+            col.add_or_remove = "add"
             col_added = [str(col) for col in self.columns]
 
         for col in self.columns:
-            col.add_or_remove = 'remove'
+            col.add_or_remove = "remove"
             col_removed = [str(col) for col in self.columns]
 
         col_init = ["{column}: 0".format(column=col.column) for col in self.columns]
@@ -695,27 +708,33 @@ class NamedDimension:
 
         col_init_joined = ",\n\t\t".join(col_init)
 
-        data_added = (""
-            'function (p, v) {'
-            '    ++p.count;'
-            f'    {col_added_joined}'
-            '    return p;'
-            '},')
+        data_added = (
+            ""
+            "function (p, v) {"
+            "    ++p.count;"
+            f"    {col_added_joined}"
+            "    return p;"
+            "},"
+        )
 
-        data_removed = (""
-            'function (p, v) {'
-            '    --p.count;'
-            f'    {col_removed_joined}'
-            '    return p;'
-            '},')
+        data_removed = (
+            ""
+            "function (p, v) {"
+            "    --p.count;"
+            f"    {col_removed_joined}"
+            "    return p;"
+            "},"
+        )
 
-        data_init = (""
-            'function () {'
-            '    return {'
-            '        count: 0,'
-            f'        {col_init_joined}'
-            '    };'
-            '}')
+        data_init = (
+            ""
+            "function () {"
+            "    return {"
+            "        count: 0,"
+            f"        {col_init_joined}"
+            "    };"
+            "}"
+        )
 
         reduce_group_code = f"""
             var {self.dim_replaced_together}_group = {self.dim_replaced_together}_dimension.group().reduce(
@@ -858,13 +877,15 @@ class VC:
         if other.col_type:
             if isinstance(other, VC):
                 return VE(
-                    ["(",
-                    self.col_type,
-                    self.colname,
-                    " + ",
-                    other.col_type,
-                    other.colname,
-                    ")"]
+                    [
+                        "(",
+                        self.col_type,
+                        self.colname,
+                        " + ",
+                        other.col_type,
+                        other.colname,
+                        ")",
+                    ]
                 )
             else:
                 return VE(["(", self.col_type, self.colname, " + ", other, ")"])
@@ -874,33 +895,43 @@ class VC:
     def __sub__(self, other):
         if other.col_type:
             if isinstance(other, VC):
-                return VE([
-                    "(",
-                    self.col_type,
-                    self.colname,
-                    " - ",
-                    other.col_type,
-                    other.colname,
-                    ")"]
+                return VE(
+                    [
+                        "(",
+                        self.col_type,
+                        self.colname,
+                        " - ",
+                        other.col_type,
+                        other.colname,
+                        ")",
+                    ]
                 )
             else:
                 return VE(["(", self.col_type, self.colname, " - ", other, ")"])
         else:
-            return VE(
-                ["(", self.col_type, self.colname, " - ", other.colname, ")"]
-            )
+            return VE(["(", self.col_type, self.colname, " - ", other.colname, ")"])
 
     def __mul__(self, other):
         if other.col_type:
             if isinstance(other, VC):
-                return VE(["(", self.col_type, self.colname, " * ", other.col_type, other.colname, ")"])
+                return VE(
+                    [
+                        "(",
+                        self.col_type,
+                        self.colname,
+                        " * ",
+                        other.col_type,
+                        other.colname,
+                        ")",
+                    ]
+                )
             else:
                 return VE(["(", self.col_type, self.colname, " * ", other, ")"])
         else:
             return VE(["(", self.col_type, self.colname, " * ", other.colname, ")"])
 
     def __abs__(self):
-        return VE(["(", 'Math.abs({', self.col_type, self.colname, ")", ")"])
+        return VE(["(", "Math.abs({", self.col_type, self.colname, ")", ")"])
 
     def __truediv__(self, other):
         if other.col_type:
@@ -911,7 +942,7 @@ class VC:
         else:
             denominator = [other.colname]
         initial_str = [self.col_type, self.colname, " / "] + denominator
-        return VE(denominator + [" ? " , '(']  + initial_str + [')'])
+        return VE(denominator + [" ? ", "("] + initial_str + [")"])
 
     __floordiv__ = __truediv__
 
@@ -943,7 +974,7 @@ class VE:
         if other.col_type:
             if isinstance(other, VC):
                 return VE(
-                    ["(" , *self.vc_list , " - " , other.col_type , other.colname , ")"]
+                    ["(", *self.vc_list, " - ", other.col_type, other.colname, ")"]
                 )
             else:
                 return VE(["(", *self.vc_list, " - ", other, ")"])
@@ -983,9 +1014,9 @@ class VE:
             denominator = [other.colname]
         initial_str = self.vc_list + [" / "] + denominator
         if is_number(string_join(denominator)):
-            return VE(['('] + initial_str + [')'])
+            return VE(["("] + initial_str + [")"])
         else:
-            return VE(denominator + [" ? ", '('] + initial_str + [')', " : 0"])
+            return VE(denominator + [" ? ", "("] + initial_str + [")", " : 0"])
 
     __floordiv__ = __truediv__
 
@@ -995,23 +1026,48 @@ class VS:
         self.statement = statement
         self.column = column
         self.add_or_remove = add_or_remove
-        self.divisor=str(self.statement).split('?')[0].strip() if '?' in str(self.statement) else 'aa'
-        self.divisor_parenthesis = self.divisor[0] == '(' and self.divisor[-1] == ')'
+        self.divisor = (
+            str(self.statement).split("?")[0].strip()
+            if "?" in str(self.statement)
+            else "aa"
+        )
+        self.divisor_parenthesis = self.divisor[0] == "(" and self.divisor[-1] == ")"
 
     @property
     def make_statement(self):
         if self.divisor_parenthesis:
-            return_string = "p." + self.column + self.plus_or_minus(self.statement, self.add_or_remove) + "= " + str(self.statement) + ";"
+            return_string = (
+                "p."
+                + self.column
+                + self.plus_or_minus(self.statement, self.add_or_remove)
+                + "= "
+                + str(self.statement)
+                + ";"
+            )
         else:
-            if str(self.statement)[0] == '(' and str(self.statement)[-1] == ')':
-                return_string = "p." + self.column + self.plus_or_minus(self.statement, self.add_or_remove) + "= " + str(self.statement)[1:-1] + ";"
+            if str(self.statement)[0] == "(" and str(self.statement)[-1] == ")":
+                return_string = (
+                    "p."
+                    + self.column
+                    + self.plus_or_minus(self.statement, self.add_or_remove)
+                    + "= "
+                    + str(self.statement)[1:-1]
+                    + ";"
+                )
             else:
-                return_string = "p." + self.column + self.plus_or_minus(self.statement, self.add_or_remove) + "= " + str(self.statement) + ";"
+                return_string = (
+                    "p."
+                    + self.column
+                    + self.plus_or_minus(self.statement, self.add_or_remove)
+                    + "= "
+                    + str(self.statement)
+                    + ";"
+                )
 
-        if '?' in return_string:
-            if ':' not in return_string:
+        if "?" in return_string:
+            if ":" not in return_string:
                 return_string = return_string[:-1]
-                return_string += ' : 0;'
+                return_string += " : 0;"
 
         return return_string
 
@@ -1053,5 +1109,3 @@ class VirtualColumn:
 
     def __repr__(self):
         return f"<VirtualColumn: {self.returned_string}>"
-
-

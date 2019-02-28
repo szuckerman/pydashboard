@@ -20,12 +20,14 @@ from pydashboard.dc_components import (
     BarChart,
     Label,
     BubbleChart,
-    LineChart)
+    LineChart,
+)
 from pydashboard.dominate_template import dashboard3 as t
 
-def compare_strings(s1,s2):
-    s1_replaced = str(s1).replace('\n', '').replace(' ', '').replace('\t', '')
-    s2_replaced = str(s2).replace('\n', '').replace(' ', '').replace('\t', '')
+
+def compare_strings(s1, s2):
+    s1_replaced = str(s1).replace("\n", "").replace(" ", "").replace("\t", "")
+    s2_replaced = str(s2).replace("\n", "").replace(" ", "").replace("\t", "")
     return s1_replaced == s2_replaced
 
 
@@ -46,54 +48,60 @@ def test_absgain_VS_string(monkeypatch):
 
 def test_VE_with_abs(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
-    output = abs(VC('close') - VC('open'))
-    assert str(output) == '(Math.abs(v.close - v.open))'
+    output = abs(VC("close") - VC("open"))
+    assert str(output) == "(Math.abs(v.close - v.open))"
 
 
 def test_VE_with_constant(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
     output = (VC("close") - VC("open")) * VC(100)
-    assert str(output) == '((v.close - v.open) * 100)'
+    assert str(output) == "((v.close - v.open) * 100)"
 
 
 def test_VE_with_division(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
-    output = (VC('open') + VC('close')) / VC(2)
-    assert  '((v.open + v.close) / 2)' == str(output)
+    output = (VC("open") + VC("close")) / VC(2)
+    assert "((v.open + v.close) / 2)" == str(output)
 
 
 def test_VE_division_p_col(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
-    output = VC('sumIndex') / VC('count')
-    assert 'p.count ? (p.sumIndex / p.count)' == str(output)
+    output = VC("sumIndex") / VC("count")
+    assert "p.count ? (p.sumIndex / p.count)" == str(output)
 
 
 def test_ndx_bubble_chart(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
 
 
-
 def test_nameddimension_VC(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
     absGain_eq = (VC("close") - VC("open")) * VC(100)
-    fluctuation_eq = abs(VC('close') - VC('open'))
-    sumIndex_eq = (VC('open') + VC('close')) / VC(2)
-    avgIndex_eq = VC('sumIndex') / VC('count')
-    percentageGain_eq = (VC('absGain') / VC('avgIndex')) * VC(100)
-    fluctuationPercentage_eq = (VC('fluctuation') / VC('avgIndex')) * VC(100)
+    fluctuation_eq = abs(VC("close") - VC("open"))
+    sumIndex_eq = (VC("open") + VC("close")) / VC(2)
+    avgIndex_eq = VC("sumIndex") / VC("count")
+    percentageGain_eq = (VC("absGain") / VC("avgIndex")) * VC(100)
+    fluctuationPercentage_eq = (VC("fluctuation") / VC("avgIndex")) * VC(100)
 
-    absGain = VS('absGain', absGain_eq)
-    fluctuation = VS('fluctuation', fluctuation_eq)
-    sumIndex = VS('sumIndex', sumIndex_eq)
-    avgIndex = VS('avgIndex', avgIndex_eq)
-    percentageGain = VS('percentageGain', percentageGain_eq)
-    fluctuationPercentage = VS('fluctuationPercentage', fluctuationPercentage_eq)
+    absGain = VS("absGain", absGain_eq)
+    fluctuation = VS("fluctuation", fluctuation_eq)
+    sumIndex = VS("sumIndex", sumIndex_eq)
+    avgIndex = VS("avgIndex", avgIndex_eq)
+    percentageGain = VS("percentageGain", percentageGain_eq)
+    fluctuationPercentage = VS("fluctuationPercentage", fluctuationPercentage_eq)
 
-    eqs = [absGain, fluctuation, sumIndex, avgIndex, percentageGain, fluctuationPercentage]
+    eqs = [
+        absGain,
+        fluctuation,
+        sumIndex,
+        avgIndex,
+        percentageGain,
+        fluctuationPercentage,
+    ]
 
-    output = NamedDimension(columns=eqs, groupby=['year'])
+    output = NamedDimension(columns=eqs, groupby=["year"])
 
-    expected = '''
+    expected = """
             var year_group = year_dimension.group().reduce(
                 /* callback for when data is added to the current filter results */
                 function (p, v) {
@@ -129,7 +137,7 @@ def test_nameddimension_VC(monkeypatch):
                         fluctuationPercentage: 0
                     };
                 }
-    );'''
+    );"""
 
     assert compare_strings(output, expected)
 
@@ -146,12 +154,22 @@ def test_gainOrLossChart(ndx):
     dat["gainOrLoss"] = dat.change.apply(gainOrLoss)
     gainOrLoss_dim = Dimension("gainOrLoss")
 
-    gainOrLossChart = PieChart("gain-loss-chart", gainOrLoss_dim, width=180, height=180, radius=80, inner_radius=40,
-                               renderLabel=True, label=Label("percent", precision=0), transitionDuration=500,
-                               colors=["#3182bd", "#6baed6", "#9ecae1", "#c6dbef", "#dadaeb"], colorDomain= [-1750, 1644],
-                               colorAccessor=True)
+    gainOrLossChart = PieChart(
+        "gain-loss-chart",
+        gainOrLoss_dim,
+        width=180,
+        height=180,
+        radius=80,
+        inner_radius=40,
+        renderLabel=True,
+        label=Label("percent", precision=0),
+        transitionDuration=500,
+        colors=["#3182bd", "#6baed6", "#9ecae1", "#c6dbef", "#dadaeb"],
+        colorDomain=[-1750, 1644],
+        colorAccessor=True,
+    )
 
-    dc_documentation_string = '''
+    dc_documentation_string = """
     var pie_chart_gain_loss_chart = dc.pieChart("#gain-loss-chart")
             .width(180)
             .height(180)
@@ -175,29 +193,51 @@ def test_gainOrLossChart(ndx):
                 }
                 return label;
             });
-            '''
+            """
 
-    gainOrLossChart_replaced = str(gainOrLossChart).replace('\n', '').replace(' ', '').replace('\t', '')
-    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+    gainOrLossChart_replaced = (
+        str(gainOrLossChart).replace("\n", "").replace(" ", "").replace("\t", "")
+    )
+    dc_documentation_string_replaced = (
+        str(dc_documentation_string)
+        .replace("\n", "")
+        .replace(" ", "")
+        .replace("\t", "")
+    )
 
     assert gainOrLossChart_replaced == dc_documentation_string_replaced
 
 
 def test_dayOfWeekChart(ndx):
-
     def day_of_week(x):
         y = pd.to_datetime(x)
         return day_list[y.dayofweek]
 
     dat = ndx
 
-    day_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    day_list = [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    ]
 
     dat["day_of_week"] = dat.date.apply(day_of_week)
     day_of_week_dim = Dimension("day_of_week")
-    row_chart = RowChart("day-of-week-chart", day_of_week_dim, elasticX=True, height=180, width=180, xAxis="ticks(4)", label=Label("key"))
+    row_chart = RowChart(
+        "day-of-week-chart",
+        day_of_week_dim,
+        elasticX=True,
+        height=180,
+        width=180,
+        xAxis="ticks(4)",
+        label=Label("key"),
+    )
 
-    dc_documentation_string = '''
+    dc_documentation_string = """
         var row_chart_day_of_week_chart = dc.rowChart("#day-of-week-chart")
             .width(180)
             .height(180)
@@ -215,10 +255,17 @@ def test_dayOfWeekChart(ndx):
         row_chart_day_of_week_chart.label(function (d) {
                 return d.key[0];
             });
-    '''
+    """
 
-    row_chart_replaced = str(row_chart).replace('\n', '').replace(' ', '').replace('\t', '')
-    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+    row_chart_replaced = (
+        str(row_chart).replace("\n", "").replace(" ", "").replace("\t", "")
+    )
+    dc_documentation_string_replaced = (
+        str(dc_documentation_string)
+        .replace("\n", "")
+        .replace(" ", "")
+        .replace("\t", "")
+    )
 
     assert row_chart_replaced == dc_documentation_string_replaced
 
@@ -230,12 +277,20 @@ def test_fluctuationChart(ndx):
 
     fluctuation_dim = Dimension("fluctuation")
 
-    fluctuation_chart = BarChart("volume-month-chart", fluctuation_dim, width=420,
-        height=180, elasticY=True, gap=1, centerBar=True, alwaysUseRounding=True,
-                                 xAxis="tickFormat(function(v){return v+'%';})", yAxis='ticks(5)'
+    fluctuation_chart = BarChart(
+        "volume-month-chart",
+        fluctuation_dim,
+        width=420,
+        height=180,
+        elasticY=True,
+        gap=1,
+        centerBar=True,
+        alwaysUseRounding=True,
+        xAxis="tickFormat(function(v){return v+'%';})",
+        yAxis="ticks(5)",
     )
 
-    dc_documentation_string = '''
+    dc_documentation_string = """
     var bar_chart_volume_month_chart = dc.barChart("#volume-month-chart")
         .width(420)
         .height(180)
@@ -259,10 +314,17 @@ def test_fluctuationChart(ndx):
         function (v) { return v + '%'; });
     
     bar_chart_volume_month_chart.yAxis().ticks(5);
-    '''
+    """
 
-    row_chart_replaced = str(fluctuation_chart).replace('\n', '').replace(' ', '').replace('\t', '')
-    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+    row_chart_replaced = (
+        str(fluctuation_chart).replace("\n", "").replace(" ", "").replace("\t", "")
+    )
+    dc_documentation_string_replaced = (
+        str(dc_documentation_string)
+        .replace("\n", "")
+        .replace(" ", "")
+        .replace("\t", "")
+    )
 
     assert row_chart_replaced == dc_documentation_string_replaced
 
@@ -278,19 +340,27 @@ def test_moveChart(monkeypatch, ndx):
     dat["month"] = pd.to_datetime(dat.date)
     dat["month"] = dat.month.apply(get_month)
 
-    total_eq = (VC('open') + VC('close')) / VC(2)
-    total = VS('total', total_eq)
+    total_eq = (VC("open") + VC("close")) / VC(2)
+    total = VS("total", total_eq)
 
-    avg_eq = round(VC('total') / VC('count'))
-    avg = VS('avg', avg_eq)
+    avg_eq = round(VC("total") / VC("count"))
+    avg = VS("avg", avg_eq)
 
     eqs = [total, avg]
 
-    move_months_dim = NamedDimension(eqs, groupby=['month'], group_text='Monthly Index Average')
+    move_months_dim = NamedDimension(
+        eqs, groupby=["month"], group_text="Monthly Index Average"
+    )
 
-    line_chart = LineChart("monthly-move-chart", move_months_dim, width=990, height=200, valueAccessor='avg')
+    line_chart = LineChart(
+        "monthly-move-chart",
+        move_months_dim,
+        width=990,
+        height=200,
+        valueAccessor="avg",
+    )
 
-    dc_documentation_string = '''
+    dc_documentation_string = """
     var line_chart_monthly_move_chart = dc.lineChart("#monthly-move-chart")
         .renderArea(true)
         .width(990)
@@ -321,11 +391,16 @@ def test_moveChart(monkeypatch, ndx):
             }
             return dateFormat(d.key) + '\n' + numberFormat(value);
         });
-    '''
+    """
 
-
-    line_chart_replaced = str(line_chart).replace('\n', '').replace(' ', '').replace('\t', '')
-    dc_documentation_string_replaced = str(dc_documentation_string).replace('\n', '').replace(' ', '').replace('\t', '')
+    line_chart_replaced = (
+        str(line_chart).replace("\n", "").replace(" ", "").replace("\t", "")
+    )
+    dc_documentation_string_replaced = (
+        str(dc_documentation_string)
+        .replace("\n", "")
+        .replace(" ", "")
+        .replace("\t", "")
+    )
 
     assert line_chart_replaced == dc_documentation_string_replaced
-

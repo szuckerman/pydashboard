@@ -53,8 +53,9 @@ class CapMixin(BaseMixin, metaclass=ABCMeta):
 
 class ColorMixin(BaseMixin, metaclass=ABCMeta):
     @abstractmethod
-    def __init__(self, colorAccessor=None, colors=None, colorDomain=None,
-                 *args, **kwargs):
+    def __init__(
+        self, colorAccessor=None, colors=None, colorDomain=None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.colorAccessor = colorAccessor
         self.colors = colors
@@ -143,7 +144,8 @@ class BarChart(StackMixin):
     @property
     def js_chart_code(self):
         dimension_string_list = [
-            f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")']
+            f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")'
+        ]
 
         x_axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
         y_axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
@@ -155,7 +157,9 @@ class BarChart(StackMixin):
         if self.height:
             dimension_string_list.append(f".height({self.height})")
 
-        dimension_string_list.append(".margins({top: 10, right: 50, bottom: 30, left: 40})")
+        dimension_string_list.append(
+            ".margins({top: 10, right: 50, bottom: 30, left: 40})"
+        )
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
         dimension_string_list.append(f".group({self.dimension.group_name})")
 
@@ -177,13 +181,15 @@ class BarChart(StackMixin):
 
         dimension_string_list.append(f".x(d3.scaleLinear().domain([-25, 25]))")
 
-        dimension_string_list.append('''
+        dimension_string_list.append(
+            """
                 .filterPrinter(function (filters) {
             var filter = filters[0], s = '';
             s += numberFormat(filter[0]) + '% -> ' + numberFormat(filter[1]) + '%';
             return s;
         })
-        ''')
+        """
+        )
 
         if self.xAxis:
             x_axis_string_list.append(f".xAxis().{self.xAxis}")
@@ -192,8 +198,16 @@ class BarChart(StackMixin):
             y_axis_string_list.append(f".yAxis().{self.yAxis}")
 
         DIMENSION_FINAL = DIMENSION_SPACING.join(dimension_string_list) + ";"
-        X_AXIS_FINAL = DIMENSION_SPACING.join(x_axis_string_list) + ";" if len(x_axis_string_list) > 1 else ''
-        Y_AXIS_FINAL = DIMENSION_SPACING.join(y_axis_string_list) + ";" if len(y_axis_string_list) > 1 else ''
+        X_AXIS_FINAL = (
+            DIMENSION_SPACING.join(x_axis_string_list) + ";"
+            if len(x_axis_string_list) > 1
+            else ""
+        )
+        Y_AXIS_FINAL = (
+            DIMENSION_SPACING.join(y_axis_string_list) + ";"
+            if len(y_axis_string_list) > 1
+            else ""
+        )
         AXES_FINAL = X_AXIS_FINAL + DIMENSION_SPACING + Y_AXIS_FINAL
 
         if self.margin_left:
@@ -343,7 +357,7 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
     def js_chart_code(self):
 
         dimension_string_list = [
-            f'var {self.name_replaced} = dc.rowChart("#{self.name}")',
+            f'var {self.name_replaced} = dc.rowChart("#{self.name}")'
         ]
 
         axis_string_list = [f'row_chart_{self.name.replace("-", "_")}']
@@ -354,14 +368,17 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
         if self.height:
             dimension_string_list.append(f".height({self.height})")
 
-        dimension_string_list.append(f".margins({{top: 20, left: 10, right: 10, bottom: 20}})")
+        dimension_string_list.append(
+            f".margins({{top: 20, left: 10, right: 10, bottom: 20}})"
+        )
 
         dimension_string_list.append(f".group({self.dimension.group_name})")
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
 
-        dimension_string_list.append(f".ordinalColors(['#3182bd','#6baed6','#9ecae1','#c6dbef','#dadaeb'])")
+        dimension_string_list.append(
+            f".ordinalColors(['#3182bd','#6baed6','#9ecae1','#c6dbef','#dadaeb'])"
+        )
         dimension_string_list.append(".title(function(d){return d.value;})")
-
 
         if self.elasticX:
             dimension_string_list.append(f".elasticX(true)")
@@ -479,7 +496,9 @@ class PieChart(CapMixin, ColorMixin):
             dimension_string_list.append(f".innerRadius({self.inner_radius})")
 
         if self.transitionDuration:
-            dimension_string_list.append(f".transitionDuration({self.transitionDuration})")
+            dimension_string_list.append(
+                f".transitionDuration({self.transitionDuration})"
+            )
 
         if self.colors:
             dimension_string_list.append(f".colors({self.colors})")
@@ -488,7 +507,9 @@ class PieChart(CapMixin, ColorMixin):
             dimension_string_list.append(f".colorDomain({self.colorDomain})")
 
         if self.colorAccessor:
-            dimension_string_list.append(".colorAccessor(function(d, i){return d.value;})")
+            dimension_string_list.append(
+                ".colorAccessor(function(d, i){return d.value;})"
+            )
 
         if self.externalLabels:
             dimension_string_list.append(f".externalLabels({self.externalLabels})")
@@ -519,9 +540,9 @@ class PieChart(CapMixin, ColorMixin):
         if self.label:
             self.label.chart_name = self.name_replaced
             return (
-                    DIMENSION_SPACING.join(dimension_string_list)
-                    + ";" +
-                getattr(self.label, self.label.label_type)
+                DIMENSION_SPACING.join(dimension_string_list)
+                + ";"
+                + getattr(self.label, self.label.label_type)
             )
 
         return DIMENSION_SPACING.join(dimension_string_list) + ";"
@@ -637,7 +658,9 @@ class BubbleChart(BubbleMixin, CoordinateGridMixin):
         if self.r:
             dimension_string_list.append(f".r(d3.scaleLinear().domain([0, 4000]))")
 
-        dimension_string_list.append(f".margins({{top: 10, right: 50, bottom: 30, left: 40}})")
+        dimension_string_list.append(
+            f".margins({{top: 10, right: 50, bottom: 30, left: 40}})"
+        )
         dimension_string_list.append(f".elasticY(true)")
         dimension_string_list.append(f".elasticX(true)")
         dimension_string_list.append(f".colors(d3.schemeRdYlGn[9])")
@@ -678,8 +701,16 @@ class BubbleChart(BubbleMixin, CoordinateGridMixin):
 
 
 class LineChart(StackMixin):
-    def __init__(self, name, dimension, transitionDuration=1000, elasticY=True,
-                 renderHorizontalGridLines=True, *args, **kwargs):
+    def __init__(
+        self,
+        name,
+        dimension,
+        transitionDuration=1000,
+        elasticY=True,
+        renderHorizontalGridLines=True,
+        *args,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
         self.name = name
         self.dimension = dimension
@@ -702,13 +733,17 @@ class LineChart(StackMixin):
             dimension_string_list.append(f".height({self.height})")
 
         if self.transitionDuration:
-            dimension_string_list.append(f".transitionDuration({self.transitionDuration})")
+            dimension_string_list.append(
+                f".transitionDuration({self.transitionDuration})"
+            )
 
         dimension_string_list.append(f".margins({{top:30,right:50,bottom:25,left:40}})")
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
         dimension_string_list.append(f".mouseZoomable(true)")
         dimension_string_list.append(f".rangeChart(volumeChart)")
-        dimension_string_list.append(f".x(d3.scaleTime().domain([newDate(1985,0,1),newDate(2012,11,31)]))")
+        dimension_string_list.append(
+            f".x(d3.scaleTime().domain([newDate(1985,0,1),newDate(2012,11,31)]))"
+        )
 
         dimension_string_list.append(f".round(d3.timeMonth.round)")
         dimension_string_list.append(f".xUnits(d3.timeMonths)")
@@ -719,11 +754,15 @@ class LineChart(StackMixin):
         if self.renderHorizontalGridLines:
             dimension_string_list.append(f".renderHorizontalGridLines(true)")
 
-        dimension_string_list.append(f".legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))")
+        dimension_string_list.append(
+            f".legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))"
+        )
         dimension_string_list.append(f".brushOn(false)")
 
         if self.dimension.group_text:
-            dimension_string_list.append(f".group({self.dimension.group_name}, '{self.dimension.group_text}')")
+            dimension_string_list.append(
+                f".group({self.dimension.group_name}, '{self.dimension.group_text}')"
+            )
         else:
             dimension_string_list.append(f".group({self.dimension.group_name})")
 
@@ -732,17 +771,20 @@ class LineChart(StackMixin):
                 f".valueAccessor(function(d){{return d.value.{self.valueAccessor};}})"
             )
 
-        dimension_string_list.append(f".stack(monthlyMoveGroup,'MonthlyIndexMove', function(d) {{return d.value;}})")
-        dimension_string_list.append('''.title(function (d) {
+        dimension_string_list.append(
+            f".stack(monthlyMoveGroup,'MonthlyIndexMove', function(d) {{return d.value;}})"
+        )
+        dimension_string_list.append(
+            """.title(function (d) {
             var value = d.value.avg ? d.value.avg : d.value;
             if (isNaN(value)) {
                 value = 0;
             }
             return dateFormat(d.key) + '\n' + numberFormat(value);
-        })''')
+        })"""
+        )
 
         return DIMENSION_SPACING.join(dimension_string_list) + ";"
 
     def __str__(self):
         return self.js_chart_code
-
