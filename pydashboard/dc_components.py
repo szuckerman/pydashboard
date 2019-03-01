@@ -749,9 +749,7 @@ class LineChart(StackMixin):
             )
 
         if self.margins:
-            dimension_string_list.append(
-                f".margins({self.margins})"
-            )
+            dimension_string_list.append(f".margins({self.margins})")
 
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
 
@@ -812,7 +810,6 @@ class LineChart(StackMixin):
 
 
 class Legend:
-
     def __init__(self, x=None, y=None, itemHeight=None, gap=None):
         self.x = x
         self.y = y
@@ -820,15 +817,17 @@ class Legend:
         self.gap = gap
 
     def __str__(self):
-        label_string = f'dc.legend()' \
-                       f'.x({self.x})' \
-                       f'.y({self.y})' \
-                       f'.itemHeight({self.itemHeight})' \
-                       f'.gap({self.gap})'
+        label_string = (
+            f"dc.legend()"
+            f".x({self.x})"
+            f".y({self.y})"
+            f".itemHeight({self.itemHeight})"
+            f".gap({self.gap})"
+        )
         return label_string
 
-class Margin:
 
+class Margin:
     def __init__(self, top=None, right=None, bottom=None, left=None):
         self.top = top
         self.right = right
