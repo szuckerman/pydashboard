@@ -708,6 +708,11 @@ class LineChart(StackMixin):
         transitionDuration=1000,
         elasticY=True,
         renderHorizontalGridLines=True,
+        mouseZoomable=True,
+        legend=True,
+        brushOn=False,
+        renderArea=False,
+        margins=False,
         *args,
         **kwargs,
     ):
@@ -717,6 +722,11 @@ class LineChart(StackMixin):
         self.transitionDuration = transitionDuration
         self.elasticY = elasticY
         self.renderHorizontalGridLines = renderHorizontalGridLines
+        self.mouseZoomable = mouseZoomable
+        self.legend = legend
+        self.brushOn = brushOn
+        self.renderArea = renderArea
+        self.margins = margins
 
     @property
     def js_chart_code(self):
@@ -724,7 +734,8 @@ class LineChart(StackMixin):
             f'var line_chart_{self.name.replace("-", "_")} = dc.lineChart("#{self.name}")'
         ]
 
-        dimension_string_list.append(f".renderArea(true)")
+        if self.renderArea:
+            dimension_string_list.append(f".renderArea(true)")
 
         if self.width:
             dimension_string_list.append(f".width({self.width})")
@@ -737,10 +748,18 @@ class LineChart(StackMixin):
                 f".transitionDuration({self.transitionDuration})"
             )
 
-        dimension_string_list.append(f".margins({{top:30,right:50,bottom:25,left:40}})")
+        if self.margins:
+            dimension_string_list.append(
+                f".margins({self.margins})"
+            )
+
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
-        dimension_string_list.append(f".mouseZoomable(true)")
+
+        if self.mouseZoomable:
+            dimension_string_list.append(".mouseZoomable(true)")
+
         dimension_string_list.append(f".rangeChart(volumeChart)")
+
         dimension_string_list.append(
             f".x(d3.scaleTime().domain([newDate(1985,0,1),newDate(2012,11,31)]))"
         )
@@ -754,10 +773,11 @@ class LineChart(StackMixin):
         if self.renderHorizontalGridLines:
             dimension_string_list.append(f".renderHorizontalGridLines(true)")
 
-        dimension_string_list.append(
-            f".legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))"
-        )
-        dimension_string_list.append(f".brushOn(false)")
+        if self.legend:
+            dimension_string_list.append(f".legend({self.legend})")
+
+        if not self.brushOn:
+            dimension_string_list.append(".brushOn(false)")
 
         if self.dimension.group_text:
             dimension_string_list.append(
@@ -774,6 +794,7 @@ class LineChart(StackMixin):
         dimension_string_list.append(
             f".stack(monthlyMoveGroup,'MonthlyIndexMove', function(d) {{return d.value;}})"
         )
+
         dimension_string_list.append(
             """.title(function (d) {
             var value = d.value.avg ? d.value.avg : d.value;
@@ -788,3 +809,32 @@ class LineChart(StackMixin):
 
     def __str__(self):
         return self.js_chart_code
+
+
+class Legend:
+
+    def __init__(self, x=None, y=None, itemHeight=None, gap=None):
+        self.x = x
+        self.y = y
+        self.itemHeight = itemHeight
+        self.gap = gap
+
+    def __str__(self):
+        label_string = f'dc.legend()' \
+                       f'.x({self.x})' \
+                       f'.y({self.y})' \
+                       f'.itemHeight({self.itemHeight})' \
+                       f'.gap({self.gap})'
+        return label_string
+
+class Margin:
+
+    def __init__(self, top=None, right=None, bottom=None, left=None):
+        self.top = top
+        self.right = right
+        self.bottom = bottom
+        self.left = left
+
+    def __str__(self):
+        margin_string = f"{{top:{self.top},right:{self.right},bottom:{self.bottom},left:{self.left}}}"
+        return margin_string

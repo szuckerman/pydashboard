@@ -21,7 +21,7 @@ from pydashboard.dc_components import (
     Label,
     BubbleChart,
     LineChart,
-)
+    Legend, Margin)
 from pydashboard.dominate_template import dashboard3 as t
 
 
@@ -358,6 +358,9 @@ def test_moveChart(monkeypatch, ndx):
         width=990,
         height=200,
         valueAccessor="avg",
+        legend=Legend(x=800, y=10, itemHeight=13, gap=5),
+        renderArea=True,
+        margins=Margin(top=30,right=50,bottom=25,left=40)
     )
 
     dc_documentation_string = """
@@ -450,3 +453,11 @@ class TestLineChartAttributes:
 
     def test_has_renderHorizontalGridLines(self, line_chart):
         assert hasattr(line_chart, "renderHorizontalGridLines")
+
+def test_legend():
+    legend = Legend(x=800, y=10, itemHeight=13, gap=5)
+    assert str(legend) == f"dc.legend().x(800).y(10).itemHeight(13).gap(5)"
+
+def test_margin():
+    margin = Margin(top=30,right=50,bottom=25,left=40)
+    assert str(margin) == "{top:30,right:50,bottom:25,left:40}"
