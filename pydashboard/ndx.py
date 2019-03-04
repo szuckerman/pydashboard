@@ -19,7 +19,7 @@ from pydashboard.dc_components import (
     Label,
     BubbleChart,
 )
-from pydashboard.dominate_template import dashboard3 as t
+from pydashboard.dominate_template import ndx_dashboard as t
 
 dat = pd.read_csv(
     "/Users/zucks/PycharmProjects/pydashboard/pydashboard/example_data/ndx.csv"
@@ -86,6 +86,9 @@ row_chart = RowChart("B", day_of_week_dim, elasticX=True, height=350, xAxis="tic
 
 dashboard = s.Dashboard(data=dat, template=t)
 
+dashboard.view_outlines()
+
+
 absGain_eq = (VC("close") - VC("open")) * VC(100)
 fluctuation_eq = abs(VC("close") - VC("open"))
 sumIndex_eq = (VC("open") + VC("close")) / VC(2)
@@ -117,8 +120,6 @@ str(absGain_eq)
 str(avgIndex_eq)
 
 str(absGain_eq)
-
-named_dim.reduce_group_code
 
 bub_params = {
     "width": 990,

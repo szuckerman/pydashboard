@@ -23,6 +23,8 @@ from pydashboard.dc_components import (
     LineChart,
     Legend,
     Margin,
+    ScaleLinear,
+    Title,
 )
 from pydashboard.dominate_template import dashboard3 as t
 
@@ -236,7 +238,7 @@ def test_dayOfWeekChart(ndx):
         height=180,
         width=180,
         xAxis="ticks(4)",
-        label=Label("key"),
+        label=Label("key_part"),
     )
 
     dc_documentation_string = """
@@ -411,50 +413,34 @@ def test_moveChart(monkeypatch, ndx):
     assert line_chart_replaced == dc_documentation_string_replaced
 
 
-class TestBarChartAttributes:
-    def test_has_name(self, bar_chart):
-        assert hasattr(bar_chart, "name")
+def test_bar_chart_attributes(bar_chart):
+    bar_chart_attributes_set = {
+        "name",
+        "dimension",
+        "alwaysUseRounding",
+        "barPadding",
+        "centerBar",
+        "gap",
+        "outerPadding",
+        "xAxis",
+        "yAxis",
+    }
 
-    def test_has_dimension(self, bar_chart):
-        assert hasattr(bar_chart, "dimension")
-
-    def test_has_alwaysUseRounding(self, bar_chart):
-        assert hasattr(bar_chart, "alwaysUseRounding")
-
-    def test_has_barPadding(self, bar_chart):
-        assert hasattr(bar_chart, "barPadding")
-
-    def test_has_centerBar(self, bar_chart):
-        assert hasattr(bar_chart, "centerBar")
-
-    def test_has_gap(self, bar_chart):
-        assert hasattr(bar_chart, "gap")
-
-    def test_has_outerPadding(self, bar_chart):
-        assert hasattr(bar_chart, "outerPadding")
-
-    def test_has_xAxis(self, bar_chart):
-        assert hasattr(bar_chart, "xAxis")
-
-    def test_has_yAxis(self, bar_chart):
-        assert hasattr(bar_chart, "yAxis")
+    for col in bar_chart_attributes_set:
+        assert hasattr(bar_chart, col)
 
 
-class TestLineChartAttributes:
-    def test_has_name(self, line_chart):
-        assert hasattr(line_chart, "name")
+def test_line_chart_attributes(line_chart):
+    line_chart_attributes_set = {
+        "name",
+        "dimension",
+        "transitionDuration",
+        "elasticY",
+        "renderHorizontalGridLines",
+    }
 
-    def test_has_dimension(self, line_chart):
-        assert hasattr(line_chart, "dimension")
-
-    def test_has_transitionDuration(self, line_chart):
-        assert hasattr(line_chart, "transitionDuration")
-
-    def test_has_elasticY(self, line_chart):
-        assert hasattr(line_chart, "elasticY")
-
-    def test_has_renderHorizontalGridLines(self, line_chart):
-        assert hasattr(line_chart, "renderHorizontalGridLines")
+    for col in line_chart_attributes_set:
+        assert hasattr(line_chart, col)
 
 
 def test_legend():
@@ -465,3 +451,144 @@ def test_legend():
 def test_margin():
     margin = Margin(top=30, right=50, bottom=25, left=40)
     assert str(margin) == "{top:30,right:50,bottom:25,left:40}"
+
+
+def test_bubble_chart(monkeypatch, ndx):
+    monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
+
+    dat = ndx
+
+    absGain_eq = (VC("close") - VC("open")) * VC(100)
+    fluctuation_eq = abs(VC("close") - VC("open"))
+    sumIndex_eq = (VC("open") + VC("close")) / VC(2)
+    avgIndex_eq = VC("sumIndex") / VC("count")
+    percentageGain_eq = (VC("absGain") / VC("avgIndex")) * VC(100)
+    fluctuationPercentage_eq = (VC("fluctuation") / VC("avgIndex")) * VC(100)
+
+    absGain = VS("absGain", absGain_eq)
+    fluctuation = VS("fluctuation2", fluctuation_eq)
+    sumIndex = VS("sumIndex", sumIndex_eq)
+    avgIndex = VS("avgIndex", avgIndex_eq)
+    percentageGain = VS("percentageGain", percentageGain_eq)
+    fluctuationPercentage = VS("fluctuationPercentage", fluctuationPercentage_eq)
+
+    columns = [
+        absGain,
+        fluctuation,
+        sumIndex,
+        avgIndex,
+        percentageGain,
+        fluctuationPercentage,
+    ]
+
+    # my_dict = {
+    #     "absGain": absGain_eq,
+    #     "fluctuation": fluctuation_eq,
+    #     "sumIndex": sumIndex_eq,
+    #     "avgIndex": avgIndex_eq,
+    #     "percentageGain": percentageGain_eq,
+    #     "fluctuationPercentage": fluctuationPercentage_eq,
+    # }
+
+    bubble_named_dimension = NamedDimension(columns=columns, groupby=["year"])
+
+    def percentage(x):
+        return f"percentage({x})"
+
+    title = {
+        "Index Gain: ": "absGain",
+        "Index Gain in Percentage: ": percentage("percentageGain"),
+        "Fluctuation / Index Ratio: ": percentage("fluctuationPercentage"),
+    }
+
+    bub_params = {
+        "width": 990,
+        "height": 250,
+        "x": ScaleLinear([-2500, 2500]),
+        "y": ScaleLinear([-100, 100]),
+        "r": ScaleLinear([-0, 4000]),
+        "colorAccessor": "absGain",
+        "keyAccessor": "absGain",
+        "valueAccessor": "percentageGain",
+        "radiusValueAccessor": "fluctuationPercentage",
+        "transitionDuration": 1500,
+        "margins": Margin(10, 50, 30, 40),
+        "maxBubbleRelativeSize": 0.3,
+        "xAxisPadding": 500,
+        "yAxisPadding": 100,
+        "xAxisLabel": "Index Gain",
+        "yAxisLabel": "Index Gain %",
+        "label": Label().key,
+        "title": str(Title(title)),
+        "yAxis": "tickFormat(function(v){return v+'%';})",
+    }
+
+    bubble_chart = BubbleChart(
+        "yearly-bubble-chart", bubble_named_dimension, **bub_params
+    )
+
+    dc_documentation_string = """
+        var bubble_chart_yearly_bubble_chart = dc.bubbleChart("#yearly-bubble-chart")
+            .width(990) 
+            .height(250)
+            .transitionDuration(1500)
+            .margins({top: 10, right: 50, bottom: 30, left: 40})
+            .dimension(year_dimension)
+            .group(year_group)
+            .colors(d3.schemeRdYlGn[9])
+            .colorDomain([-500, 500]) 
+            .colorAccessor(function (d) {
+                return d.value.absGain;
+            })
+            .keyAccessor(function (d) {
+                return d.value.absGain;
+            })
+            .valueAccessor(function (d) {
+                return d.value.percentageGain;
+            })
+            .radiusValueAccessor(function (d) {
+                return d.value.fluctuationPercentage;
+            })
+            .maxBubbleRelativeSize(0.3)
+            .x(d3.scaleLinear().domain([-2500, 2500]))
+            .y(d3.scaleLinear().domain([-100, 100]))
+            .r(d3.scaleLinear().domain([0, 4000]))
+            .elasticX(true) 
+            .elasticY(true)
+            .xAxisPadding(500) 
+            .yAxisPadding(100)
+            .renderHorizontalGridLines(true) 
+            .renderVerticalGridLines(true) 
+            .xAxisLabel('Index Gain') 
+            .yAxisLabel('Index Gain %') 
+            .renderLabel(true)
+            .label(function (d) {
+                return d.key;
+            }) 
+            .renderTitle(true)
+            .title(function (d) {
+                return "
+                    d.key\n
+                    'Index Gain: ' + numberFormat(d.value.absGain)\n
+                    'Index Gain in Percentage: ' + numberFormat(d.value.percentageGain) + '%'\n
+                    'Fluctuation / Index Ratio: ' + numberFormat(d.value.fluctuationPercentage) + '%'"
+            });
+            
+            bubble_chart_yearly_bubble_chart.yAxis()
+            .tickFormat(function (v) {
+                return v + '%';
+            });
+        """
+
+    bubble_chart_replaced = (
+        str(bubble_chart).replace("\n", "").replace(" ", "").replace("\t", "")
+    )
+
+    dc_documentation_string_replaced = (
+        str(dc_documentation_string)
+        .replace("\n", "")
+        .replace(" ", "")
+        .replace("\t", "")
+    )
+
+    assert bubble_chart_replaced == dc_documentation_string_replaced

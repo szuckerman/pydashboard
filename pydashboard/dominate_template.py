@@ -67,3 +67,26 @@ rowa = c.Row([A, B, C])
 # row1 = c.Row([col2,col1])
 
 dashboard3 = c.Container(rowa)
+
+
+title = c.Col12(id="title", height=15)
+bubble_chart = c.Col12(id="bubble_chart", height=25)
+
+gain_loss = c.Col4(id="gain_loss_chart", height=25)
+quarters = c.Col4(id="quarters", height=25)
+day_of_week = c.Col4(id="day_of_week", height=25)
+fluctuation = c.Col12(id="fluctuation", height=25)
+
+pie_charts = c.Col7(c.Row([gain_loss, quarters, day_of_week]))
+fluctuation_charts = c.Col5(fluctuation)
+
+stacked_area = c.Col12(id="stacked_area", height=25)
+stacked_area_range = c.Col12(id="stacked_area_range", height=10)
+
+row1 = c.Row(title)
+row2 = c.Row(bubble_chart)
+row3 = c.Row([pie_charts, fluctuation_charts])
+row4 = c.Row(stacked_area)
+row5 = c.Row(stacked_area_range)
+
+ndx_dashboard = c.Container([row1, row2, row3, row4, row5])
