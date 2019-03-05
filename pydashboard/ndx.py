@@ -18,8 +18,23 @@ from pydashboard.dc_components import (
     BarChart,
     Label,
     BubbleChart,
+    ScaleLinear,
+    Margin,
+    Title,
 )
 from pydashboard.dominate_template import ndx_dashboard as t
+
+
+def percentage(x):
+    return f"percentage({x})"
+
+
+title = {
+    "Index Gain: ": "absGain",
+    "Index Gain in Percentage: ": percentage("percentageGain"),
+    "Fluctuation / Index Ratio: ": percentage("fluctuationPercentage"),
+}
+
 
 dat = pd.read_csv(
     "/Users/zucks/PycharmProjects/pydashboard/pydashboard/example_data/ndx.csv"
@@ -27,8 +42,6 @@ dat = pd.read_csv(
 
 dat.columns
 dat["change"] = dat.close - dat.open
-
-dat.head()
 
 day_list = [
     "Monday",
@@ -69,9 +82,11 @@ gain_dim = Dimension("gain")
 fluctuation_dim = Dimension("fluctuation")
 day_of_week_dim = Dimension("day_of_week")
 
-pie_chart1 = PieChart("A", gain_dim, radius=200, label=Label("percent", precision=2))
-pie_chart2 = BarChart(
-    "B",
+gain_loss_chart = PieChart(
+    "gain_loss_chart", gain_dim, radius=200, label=Label("percent", precision=2)
+)
+fluctuation_chart = BarChart(
+    "fluctuation",
     fluctuation_dim,
     width=400,
     margin_left=50,
@@ -82,7 +97,9 @@ pie_chart2 = BarChart(
     centerBar=True,
 )
 
-row_chart = RowChart("B", day_of_week_dim, elasticX=True, height=350, xAxis="ticks(4)")
+day_of_week_chart = RowChart(
+    "day_of_week", day_of_week_dim, elasticX=True, height=350, xAxis="ticks(4)"
+)
 
 dashboard = s.Dashboard(data=dat, template=t)
 
@@ -124,25 +141,34 @@ str(absGain_eq)
 bub_params = {
     "width": 990,
     "height": 250,
-    "x": True,
-    "y": True,
-    "r": True,
+    "x": ScaleLinear([-2500, 2500]),
+    "y": ScaleLinear([-100, 100]),
+    "r": ScaleLinear([-0, 4000]),
     "colorAccessor": "absGain",
     "keyAccessor": "absGain",
     "valueAccessor": "percentageGain",
     "radiusValueAccessor": "fluctuationPercentage",
+    "transitionDuration": 1500,
+    "margins": Margin(10, 50, 30, 40),
+    "maxBubbleRelativeSize": 0.3,
+    "xAxisPadding": 500,
+    "yAxisPadding": 100,
+    "xAxisLabel": "Index Gain",
+    "yAxisLabel": "Index Gain %",
+    "label": Label("key"),
+    "title": str(Title(title)),
+    "yAxis": "tickFormat(function(v){return v+'%';})",
 }
 
-bub = BubbleChart("C", named_dim, **bub_params)
-str(bub)
-str(named_dim)
+bubble_chart = BubbleChart("bubble_chart", named_dim, **bub_params)
 
-dashboard.add_graphs(pie_chart1, pie_chart2, bub)
+dashboard.add_graphs(
+    gain_loss_chart, fluctuation_chart, day_of_week_chart, bubble_chart
+)
 
 # dashboard.view_outlines()
 dashboard.view()
 
-pie_chart1
 
 sumIndex = VC("sumIndex")
 count = VC("count")

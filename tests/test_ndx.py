@@ -568,11 +568,11 @@ def test_bubble_chart(monkeypatch, ndx):
             }) 
             .renderTitle(true)
             .title(function (d) {
-                return "
-                    d.key\n
+                return
+                    d.key + \n
                     'Index Gain: ' + numberFormat(d.value.absGain)\n
                     'Index Gain in Percentage: ' + numberFormat(d.value.percentageGain) + '%'\n
-                    'Fluctuation / Index Ratio: ' + numberFormat(d.value.fluctuationPercentage) + '%'"
+                    'Fluctuation / Index Ratio: ' + numberFormat(d.value.fluctuationPercentage) + '%'
             });
             
             bubble_chart_yearly_bubble_chart.yAxis()

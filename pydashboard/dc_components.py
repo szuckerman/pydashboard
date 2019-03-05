@@ -885,7 +885,7 @@ class Title:
 
     def __init__(self, title, decimals=2):
         self.numberFormat = f"d3.format('.{decimals}f')"
-        self.title_list = ["d.key"]
+        self.title_list = ["d.key + "]
         self.title_list += [
             "'"
             + k
@@ -896,7 +896,7 @@ class Title:
         self.title_list_joined = "\n".join(self.title_list)
 
     def __str__(self):
-        return ".title(function(d) {" f'return "{self.title_list_joined}"' "})"
+        return ".title(function(d) {" f"return {self.title_list_joined}" "})"
 
 
 class Margin:
