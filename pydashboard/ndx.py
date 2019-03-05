@@ -105,7 +105,7 @@ dashboard = s.Dashboard(data=dat, template=t)
 dashboard.view_outlines()
 
 
-absGain_eq = (VC("close") - VC("open"))
+absGain_eq = VC("close") - VC("open")
 fluctuation_eq = abs(VC("close") - VC("open"))
 sumIndex_eq = (VC("open") + VC("close")) / VC(2)
 avgIndex_eq = VC("sumIndex") / VC("count")

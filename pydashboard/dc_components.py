@@ -893,7 +893,7 @@ class Title:
             for k, v in title.items()
         ]
 
-        self.title_list_joined = '[' + ",".join(self.title_list) + "].join('\n')"
+        self.title_list_joined = "[" + ",".join(self.title_list) + "].join('\n')"
 
         self.title_list_joined = self.title_list_joined.replace("\n", r"\n")
 

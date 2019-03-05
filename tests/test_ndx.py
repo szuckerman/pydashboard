@@ -528,7 +528,7 @@ def test_bubble_chart(monkeypatch, ndx):
         "yearly-bubble-chart", bubble_named_dimension, **bub_params
     )
 
-    dc_documentation_string = """
+    dc_documentation_string = r"""
         var bubble_chart_yearly_bubble_chart = dc.bubbleChart("#yearly-bubble-chart")
             .width(990) 
             .height(250)
@@ -568,11 +568,11 @@ def test_bubble_chart(monkeypatch, ndx):
             }) 
             .renderTitle(true)
             .title(function (d) {
-                return
-                    d.key + '\n' +
-                    'Index Gain: ' + numberFormat(d.value.absGain) + '\n' +
-                    'Index Gain in Percentage: ' + numberFormat(d.value.percentageGain) + '%' + '\n' +
-                    'Fluctuation / Index Ratio: ' + numberFormat(d.value.fluctuationPercentage) + '%'
+                return [
+                    d.key,
+                    'Index Gain: ' + numberFormat(d.value.absGain),
+                    'Index Gain in Percentage: ' + numberFormat(d.value.percentageGain) + '%',
+                    'Fluctuation / Index Ratio: ' + numberFormat(d.value.fluctuationPercentage) + '%'].join('\n')
             });
             
             bubble_chart_yearly_bubble_chart.yAxis()
