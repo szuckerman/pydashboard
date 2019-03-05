@@ -46,6 +46,7 @@
     <script>
         var facts = crossfilter(json_dat);
         var all = facts.groupAll();
+        var numberFormat = d3.format('.2f');
         {{ dimensions|safe }}
     </script>
     <title>Dashboard Test</title>

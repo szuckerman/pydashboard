@@ -885,7 +885,7 @@ class Title:
 
     def __init__(self, title, decimals=2):
         self.numberFormat = f"d3.format('.{decimals}f')"
-        self.title_list = ["d.key + "]
+        self.title_list = ["d.key"]
         self.title_list += [
             "'"
             + k
@@ -893,7 +893,9 @@ class Title:
             for k, v in title.items()
         ]
 
-        self.title_list_joined = "\n".join(self.title_list)
+        self.title_list_joined = '[' + ",".join(self.title_list) + "].join('\n')"
+
+        self.title_list_joined = self.title_list_joined.replace("\n", r"\n")
 
     def __str__(self):
         return ".title(function(d) {" f"return {self.title_list_joined}" "})"

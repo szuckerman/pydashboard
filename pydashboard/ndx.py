@@ -40,7 +40,6 @@ dat = pd.read_csv(
     "/Users/zucks/PycharmProjects/pydashboard/pydashboard/example_data/ndx.csv"
 )
 
-dat.columns
 dat["change"] = dat.close - dat.open
 
 day_list = [
@@ -78,13 +77,13 @@ dat["year"] = dat.date.apply(get_year)
 dat["day_of_week"] = dat.date.apply(day_of_week)
 
 gain_dim = Dimension("gain")
-# year_dim = Dimension("year")
 fluctuation_dim = Dimension("fluctuation")
 day_of_week_dim = Dimension("day_of_week")
 
 gain_loss_chart = PieChart(
     "gain_loss_chart", gain_dim, radius=200, label=Label("percent", precision=2)
 )
+
 fluctuation_chart = BarChart(
     "fluctuation",
     fluctuation_dim,
@@ -106,7 +105,7 @@ dashboard = s.Dashboard(data=dat, template=t)
 dashboard.view_outlines()
 
 
-absGain_eq = (VC("close") - VC("open")) * VC(100)
+absGain_eq = (VC("close") - VC("open"))
 fluctuation_eq = abs(VC("close") - VC("open"))
 sumIndex_eq = (VC("open") + VC("close")) / VC(2)
 avgIndex_eq = VC("sumIndex") / VC("count")
@@ -157,11 +156,11 @@ bub_params = {
     "yAxisLabel": "Index Gain %",
     "label": Label("key"),
     "title": str(Title(title)),
-    "yAxis": "tickFormat(function(v){return v+'%';})",
+    "yAxis": "tickFormat(function(v){return v + '%';})",
 }
 
 bubble_chart = BubbleChart("bubble_chart", named_dim, **bub_params)
-
+str(bubble_chart)
 dashboard.add_graphs(
     gain_loss_chart, fluctuation_chart, day_of_week_chart, bubble_chart
 )
@@ -169,7 +168,7 @@ dashboard.add_graphs(
 # dashboard.view_outlines()
 dashboard.view()
 
-
+str(bubble_chart)
 sumIndex = VC("sumIndex")
 count = VC("count")
 open = VC("open")
