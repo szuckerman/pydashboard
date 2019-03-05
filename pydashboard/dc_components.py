@@ -436,6 +436,9 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
         if self.x:
             dimension_string_list.append(f".x({self.x})")
 
+        if self.label:
+            dimension_string_list.append(f"{self.label}")
+
         if self.xAxis:
             axis_string_list.append(f".xAxis().{self.xAxis}")
 
@@ -443,13 +446,6 @@ class RowChart(CapMixin, ColorMixin, MarginMixin):
         AXES_FINAL = DIMENSION_SPACING.join(axis_string_list) + ";"
 
         DIMENSION_AND_AXIS = DIMENSION_FINAL + "\n" + AXES_FINAL
-
-        if self.label:
-            self.label.chart_name = self.name_replaced
-            if self.label.label_type == "key":
-                return DIMENSION_AND_AXIS + self.label.key
-            elif self.label.label_type == "key_part":
-                return DIMENSION_AND_AXIS + self.label.key_part
 
         return DIMENSION_AND_AXIS
 
@@ -603,46 +599,6 @@ class PieChart(CapMixin, ColorMixin):
         return f'<PieChart: "#{self.name}">'
 
 
-class Label:
-    def __init__(self, label_type=None, precision=2, chart_name=""):
-        self.chart_name = chart_name
-        self.label_type = label_type
-        self.precision = precision
-
-    @property
-    def percent(self):
-        printed_precision = "0" * self.precision
-
-        func_name = f"""{self.chart_name}.label(function(d){{
-            if ({self.chart_name}.hasFilter() && !{self.chart_name}.hasFilter(d.key)) {{
-                return d.key + ' (0%)';
-            }}
-            var label = d.key;
-            if (all.value()) {{
-                label += ' (' + Math.floor(d.value / all.value() * 100{printed_precision})/1{printed_precision} + '%)';
-            }}
-            return label;
-            }});"""
-
-        return func_name
-
-    @property
-    def key_part(self):
-        func_name = """.label(function(d){
-            return d.key[0];
-        })"""
-
-        return self.chart_name + DIMENSION_SPACING + func_name
-
-    @property
-    def key(self):
-        func_name = """.label(function(d){
-            return d.key;
-        })"""
-
-        return self.chart_name + DIMENSION_SPACING + func_name
-
-
 class BubbleChart(BubbleMixin, CoordinateGridMixin):
     """This is an implementation of the DCjs Bubble Chart.
     The documentation for how the DC methods work may be found at
@@ -749,7 +705,7 @@ class BubbleChart(BubbleMixin, CoordinateGridMixin):
 
         if self.label:
             dimension_string_list.append(".renderLabel(true)")
-            dimension_string_list.append(self.label)
+            dimension_string_list.append(str(self.label))
 
         if self.title:
             dimension_string_list.append(".renderTitle(true)")
@@ -958,3 +914,40 @@ class ScaleLinear:
     def __str__(self):
         domain_string = f"d3.scaleLinear().domain({self.domain})"
         return domain_string
+
+
+class Label:
+    def __init__(self, label_type=None, precision=2, chart_name=None, part=None):
+
+        self.label_type = label_type
+        self.precision = precision
+        self.chart_name = chart_name
+        self.part_string = f"[{part}]" if part is not None else ""
+
+    @property
+    def percent(self):
+        printed_precision = "0" * self.precision
+
+        self.printed_label = f"""{self.chart_name}.label(function(d){{
+            if ({self.chart_name}.hasFilter() && !{self.chart_name}.hasFilter(d.key)) {{
+                return d.key + ' (0%)';
+            }}
+            var label = d.key;
+            if (all.value()) {{
+                label += ' (' + Math.floor(d.value / all.value() * 100{printed_precision})/1{printed_precision} + '%)';
+            }}
+            return label;
+            }});"""
+
+        return self.printed_label
+
+    @property
+    def key(self):
+        self.printed_label = (
+            ".label(function(d){" f"return d.key{self.part_string};" "})"
+        )
+
+        return self.printed_label
+
+    def __str__(self):
+        return getattr(self, self.label_type)

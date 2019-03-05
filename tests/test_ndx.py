@@ -18,8 +18,8 @@ from pydashboard.dc_components import (
     RowChart,
     ScatterPlot,
     BarChart,
-    Label,
     BubbleChart,
+    Label,
     LineChart,
     Legend,
     Margin,
@@ -238,7 +238,7 @@ def test_dayOfWeekChart(ndx):
         height=180,
         width=180,
         xAxis="ticks(4)",
-        label=Label("key_part"),
+        label=Label("key", part=0),
     )
 
     dc_documentation_string = """
@@ -252,13 +252,13 @@ def test_dayOfWeekChart(ndx):
             .title(function (d) {
                 return d.value;
             })
-            .elasticX(true);
+            .elasticX(true)
+            .label(function (d) {
+                return d.key[0];
+            });
             
         row_chart_day_of_week_chart.xAxis().ticks(4);
         
-        row_chart_day_of_week_chart.label(function (d) {
-                return d.key[0];
-            });
     """
 
     row_chart_replaced = (
@@ -518,7 +518,7 @@ def test_bubble_chart(monkeypatch, ndx):
         "yAxisPadding": 100,
         "xAxisLabel": "Index Gain",
         "yAxisLabel": "Index Gain %",
-        "label": Label().key,
+        "label": Label("key"),
         "title": str(Title(title)),
         "yAxis": "tickFormat(function(v){return v+'%';})",
     }
