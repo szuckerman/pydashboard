@@ -365,6 +365,7 @@ def test_moveChart(monkeypatch, ndx):
         legend=Legend(x=800, y=10, itemHeight=13, gap=5),
         renderArea=True,
         margins=Margin(top=30, right=50, bottom=25, left=40),
+        xUnits="d3.timeMonths",
     )
 
     dc_documentation_string = """

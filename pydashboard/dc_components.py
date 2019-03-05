@@ -96,6 +96,7 @@ class CoordinateGridMixin(ColorMixin, MarginMixin, metaclass=ABCMeta):
         yAxisPadding=None,
         xAxisLabel=None,
         yAxisLabel=None,
+        xUnits=None,
         x=None,
         y=None,
         *args,
@@ -112,6 +113,7 @@ class CoordinateGridMixin(ColorMixin, MarginMixin, metaclass=ABCMeta):
         self.yAxisPadding = yAxisPadding
         self.xAxisLabel = xAxisLabel
         self.yAxisLabel = yAxisLabel
+        self.xUnits = xUnits
         self.x = x
         self.y = y
 
@@ -808,7 +810,9 @@ class LineChart(StackMixin):
         )
 
         dimension_string_list.append(f".round(d3.timeMonth.round)")
-        dimension_string_list.append(f".xUnits(d3.timeMonths)")
+
+        if self.xUnits:
+            dimension_string_list.append(f".xUnits({self.xUnits})")
 
         if self.elasticY:
             dimension_string_list.append(".elasticY(true)")
