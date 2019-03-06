@@ -156,6 +156,7 @@ class BarChart(StackMixin):
         outerPadding=None,
         xAxis=None,
         yAxis=None,
+        margins=None,
         *args,
         **kwargs,
     ):
@@ -169,6 +170,7 @@ class BarChart(StackMixin):
         self.outerPadding = outerPadding
         self.xAxis = xAxis
         self.yAxis = yAxis
+        self.margins = margins
 
     @property
     def js_chart_code(self):
@@ -186,9 +188,9 @@ class BarChart(StackMixin):
         if self.height:
             dimension_string_list.append(f".height({self.height})")
 
-        dimension_string_list.append(
-            ".margins({top: 10, right: 50, bottom: 30, left: 40})"
-        )
+        if self.margins:
+            dimension_string_list.append(f".margins({self.margins})")
+
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
         dimension_string_list.append(f".group({self.dimension.group_name})")
 

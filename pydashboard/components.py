@@ -1,3 +1,5 @@
+from collections import deque
+
 from dominate.tags import *
 from dominate.util import raw, text
 from flask import Flask, render_template
@@ -197,6 +199,7 @@ class Dashboard:
         self.outline_html = None
         if not data.empty:
             DATA_COLUMNS.update(set(data.columns))
+        self.all_nodes = self._all_nodes()
 
     def add_template(self, *items):
         item_str = [raw(str(item)) for item in items]
@@ -207,6 +210,28 @@ class Dashboard:
         GLOBAL_JS_CODE = [str(item) for item in self.items]
         self.global_js_code = "\n".join(GLOBAL_JS_CODE)
         self.html = div(self.item_str, {"class": "container"})
+
+    def add_graph_title(self, tag_id, title):
+        return_node = {
+            item for item in self.all_nodes if item.attributes.get("id") == tag_id
+        }
+        try:
+            node = return_node.pop()
+            node.add(title)
+        except KeyError:
+            return None
+
+    def _all_nodes(self):
+        """Borrowed from: https://codereview.stackexchange.com/a/135160"""
+        visited, queue = set(), deque([self.template])
+        while queue:
+            vertex = queue.popleft()
+            if hasattr(vertex, "children") and not isinstance(vertex, str):
+                for node in vertex.children:
+                    if node not in visited:
+                        visited.add(node)
+                        queue.append(node)
+        return visited
 
     @property
     def item_str(self):
@@ -297,11 +322,12 @@ class Container(div):
 
 
 class Col(div):
-    def __init__(self, other=None, height=None, padding=5, *args, **kwargs):
+    def __init__(self, other=None, height=None, title=None, padding=5, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # self.add(raw(other)) # Logic to add child dominate tag
         self.height = height
         self.padding = padding
+        self.title = title
         self.__class__.__name__ = "div"
         if self.height:
             self.update_height(self.height)
@@ -312,6 +338,9 @@ class Col(div):
                 for element in other:
                     self.add(element)
 
+        if self.title:
+            self.add(self.title)
+
     def update_height(self, height):
         self.height = height
         self.set_attribute(
@@ -320,15 +349,6 @@ class Col(div):
                 height=(100 - self.padding * 2) * self.height / 100
             ),
         )
-
-    def add_class(self, new_cls):
-        self.set_attribute(
-            "style",
-            "height: {height:.0f}vh".format(
-                height=(100 - self.padding * 2) * self.height / 100
-            ),
-        )
-        self.attributes["class"] = self.attributes["class"] + " " + new_cls
 
     def add_class(self, new_cls):
         self.set_attribute(
@@ -478,21 +498,40 @@ class Col12(Col):
 
 
 class Dimension:
-    def __init__(self, column):
+    def __init__(self, column, group=None, group_type=None):
+        self.column = column
+        self.group = group
+        self.group_type = group_type
         self.dim_replaced = column.replace(" ", "_").replace("(", "").replace(")", "")
-        self.dimension_code = self.make_dimension(column)
+        # self.dimension_code = self.make_dimension(column)
         self.dimension_name = "{dim_replaced}_dimension".format(
             dim_replaced=self.dim_replaced
         )
         self.group_name = "{dim_replaced}_group".format(dim_replaced=self.dim_replaced)
         GLOBAL_DIMENSION_CODE.append(self.dimension_code)
 
-    def make_dimension(self, column):
-        dimension_string = """
-            var {dim_replaced}_dimension = facts.dimension(function(d){{return d['{dim}'];}});
-            var {dim_replaced}_group = {dim_replaced}_dimension.group();
-        """
-        return dimension_string.format(dim=column, dim_replaced=self.dim_replaced)
+    @property
+    def dimension_code(self):
+
+        dimension_string = [
+            f"var {self.dim_replaced}_dimension = facts.dimension(function(d){{return d['{self.column}'];}});"
+        ]
+
+        if self.group_type == "sum":
+            reduce_type = "reduceSum"
+        elif self.group_type == "count":
+            reduce_type = "reduceCount"
+
+        if self.group:
+            dimension_string.append(
+                f'var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group().{reduce_type}(function(d){{return d["{self.group}"];}});'
+            )
+        else:
+            dimension_string.append(
+                f"var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group();"
+            )
+
+        return "\n".join(dimension_string)
 
 
 class MultiDimension:
