@@ -25,8 +25,9 @@ from pydashboard.dc_components import (
     Margin,
     ScaleLinear,
     Title,
-)
+    HTML)
 from pydashboard.dominate_template import dashboard3 as t
+from dominate.tags import h2
 
 
 def compare_strings(s1, s2):
@@ -290,6 +291,7 @@ def test_fluctuationChart(ndx):
         gap=1,
         centerBar=True,
         alwaysUseRounding=True,
+        margins = Margin(top=10, right=50, bottom=30, left=40),
         xAxis="tickFormat(function(v){return v+'%';})",
         yAxis="ticks(5)",
     )
@@ -593,3 +595,8 @@ def test_bubble_chart(monkeypatch, ndx):
     )
 
     assert bubble_chart_replaced == dc_documentation_string_replaced
+
+
+def test_make_html():
+    title_name = HTML('title', h2('Nasdaq 100 Index 1985/11/01-2012/06/29'))
+    assert title_name.html_string == '<h2>Nasdaq 100 Index 1985/11/01-2012/06/29</h2>'

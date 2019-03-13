@@ -2,7 +2,7 @@ from collections import deque
 
 import pandas as pd
 import numpy as np
-from dominate.tags import strong
+from dominate.tags import *
 
 from pydashboard import components as s
 from pydashboard.example_data.example_data import dat
@@ -14,7 +14,7 @@ from pydashboard.components import (
     VC,
     VE,
     VS,
-)
+    h2)
 from pydashboard.dc_components import (
     PieChart,
     RowChart,
@@ -25,8 +25,8 @@ from pydashboard.dc_components import (
     ScaleLinear,
     Margin,
     Title,
-)
-from pydashboard.dominate_template import ndx_dashboard as t
+    HTML)
+from pydashboard.dominate_template import ndx_dashboard_noheight as t
 
 
 def percentage(x):
@@ -196,8 +196,11 @@ bub_params = {
 
 bubble_chart = BubbleChart("bubble_chart", named_dim, **bub_params)
 str(bubble_chart)
+
+title_name = HTML('title', h2('Nasdaq 100 Index 1985/11/01-2012/06/29'))
+
 dashboard.add_graphs(
-    gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart
+    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart
 )
 
 # dashboard.view_outlines()

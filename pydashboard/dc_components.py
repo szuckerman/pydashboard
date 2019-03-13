@@ -1,6 +1,6 @@
 from abc import ABCMeta, abstractmethod
 from copy import copy
-from dominate.tags import div
+from dominate.tags import *
 
 INDENTION = "    "
 DIMENSION_SPACING = "\n" + INDENTION * 2
@@ -192,6 +192,7 @@ class BarChart(StackMixin):
             dimension_string_list.append(f".margins({self.margins})")
 
         dimension_string_list.append(f".dimension({self.dimension.dimension_name})")
+
         dimension_string_list.append(f".group({self.dimension.group_name})")
 
         if self.elasticY:
@@ -601,6 +602,16 @@ class PieChart(CapMixin, ColorMixin):
 
     def __repr__(self):
         return f'<PieChart: "#{self.name}">'
+
+
+class HTML:
+    def __init__(self, html_id, html):
+        self.html_id = html_id
+        self.html = html
+        self.html_string = str(self.html).replace("\n", "")
+
+    def __str__(self):
+        return f"$('#{self.html_id}').html('{self.html_string}')"
 
 
 class BubbleChart(BubbleMixin, CoordinateGridMixin):
