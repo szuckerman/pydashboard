@@ -113,7 +113,6 @@ quarter_chart = PieChart(
     "quarters", quarter_dim, radius=80, inner_radius=30, width=180, height=180
 )
 
-
 fluctuation_chart = BarChart(
     "fluctuation",
     fluctuation_dim,
@@ -137,13 +136,16 @@ day_of_week_chart = RowChart(
 
 dashboard = s.Dashboard(data=dat, template=t)
 
-dashboard.add_graph_title("gain_loss_chart", strong("Days by Gain/Loss"))
-dashboard.add_graph_title("quarters", strong("Quarters"))
-dashboard.add_graph_title("day_of_week", strong("Day of Week"))
-dashboard.add_graph_title("fluctuation", strong("Days by Fluctuation(%)"))
-dashboard.add_graph_title(
-    "stacked_area", strong("Monthly Index Abs Move & Volume/500,000 Chart")
-)
+dashboard.add_graph_title(gain_loss_chart, strong("Days by Gain/Loss"))
+dashboard.add_graph_title(quarter_chart, strong("Quarters"))
+dashboard.add_graph_title(day_of_week_chart, strong("Day of Week"))
+dashboard.add_graph_title(fluctuation_chart, strong("Days by Fluctuation(%)"))
+
+# dashboard.add_graph_title(
+#     "stacked_area", strong("Monthly Index Abs Move & Volume/500,000 Chart")
+# )
+
+
 
 dashboard.view_outlines()
 

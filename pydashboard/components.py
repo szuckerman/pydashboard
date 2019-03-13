@@ -211,13 +211,17 @@ class Dashboard:
         self.global_js_code = "\n".join(GLOBAL_JS_CODE)
         self.html = div(self.item_str, {"class": "container"})
 
-    def add_graph_title(self, tag_id, title):
+    def add_graph_title(self, chart_object, title, add_reset_link=True):
+        reset_link = f'<a class ="reset" href="javascript:{chart_object.name_replaced}.filterAll();dc.redrawAll();" style="display: none;"> reset </a>'
+
         return_node = {
-            item for item in self.all_nodes if item.attributes.get("id") == tag_id
+            item for item in self.all_nodes if item.attributes.get("id") == chart_object.name
         }
         try:
             node = return_node.pop()
             node.add(title)
+            if add_reset_link:
+                node.add(raw(reset_link))
         except KeyError:
             return None
 

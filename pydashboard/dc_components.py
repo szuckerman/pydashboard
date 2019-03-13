@@ -163,6 +163,7 @@ class BarChart(StackMixin):
         super().__init__(*args, **kwargs)
         self.name = name
         self.dimension = dimension
+        self.name_replaced = f'bar_chart_{self.name.replace("-", "_")}'
         self.alwaysUseRounding = alwaysUseRounding
         self.barPadding = barPadding
         self.centerBar = centerBar
@@ -175,7 +176,7 @@ class BarChart(StackMixin):
     @property
     def js_chart_code(self):
         dimension_string_list = [
-            f'var bar_chart_{self.name.replace("-", "_")} = dc.barChart("#{self.name}")'
+            f'var {self.name_replaced} = dc.barChart("#{self.name}")'
         ]
 
         x_axis_string_list = [f'bar_chart_{self.name.replace("-", "_")}']
