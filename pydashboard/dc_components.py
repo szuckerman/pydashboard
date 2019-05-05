@@ -780,6 +780,7 @@ class LineChart(StackMixin):
         super().__init__(*args, **kwargs)
         self.name = name
         self.dimension = dimension
+        self.name_replaced = f'line_chart_{self.name.replace("-", "_")}'
         self.transitionDuration = transitionDuration
         self.elasticY = elasticY
         self.renderHorizontalGridLines = renderHorizontalGridLines
@@ -792,7 +793,7 @@ class LineChart(StackMixin):
     @property
     def js_chart_code(self):
         dimension_string_list = [
-            f'var line_chart_{self.name.replace("-", "_")} = dc.lineChart("#{self.name}")'
+            f'var {self.name_replaced} = dc.lineChart("#{self.name}")'
         ]
 
         if self.renderArea:

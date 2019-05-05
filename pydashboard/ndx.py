@@ -25,7 +25,7 @@ from pydashboard.dc_components import (
     ScaleLinear,
     Margin,
     Title,
-    HTML)
+    HTML, LineChart, Legend)
 from pydashboard.dominate_template import ndx_dashboard_noheight as t
 
 
@@ -134,20 +134,53 @@ day_of_week_chart = RowChart(
     xAxis="ticks(4)",
 )
 
+
+def get_month(x):
+    return x.month
+
+
+dat["month"] = pd.to_datetime(dat.date)
+dat["month"] = dat.month.apply(get_month)
+
+total_eq = (VC("open") + VC("close")) / VC(2)
+total = VS("total", total_eq)
+
+
+
+avg_eq = round(VC("total") / VC("count"))
+avg = VS("avg", avg_eq)
+
+eqs = [total, avg]
+
+move_months_dim = NamedDimension(
+    eqs, groupby=["month"], group_text="Monthly Index Average"
+)
+
+str(move_months_dim)
+line_chart = LineChart(
+    "monthly-move-chart",
+    move_months_dim,
+    width=990,
+    height=200,
+    valueAccessor="avg",
+    legend=Legend(x=800, y=10, itemHeight=13, gap=5),
+    renderArea=True,
+    margins=Margin(top=30, right=50, bottom=25, left=40),
+    xUnits="d3.timeMonths",
+)
+
 dashboard = s.Dashboard(data=dat, template=t)
 
 dashboard.add_graph_title(gain_loss_chart, strong("Days by Gain/Loss"))
 dashboard.add_graph_title(quarter_chart, strong("Quarters"))
 dashboard.add_graph_title(day_of_week_chart, strong("Day of Week"))
-dashboard.add_graph_title(fluctuation_chart, strong("Days by Fluctuation(%)"))
+dashboard.add_graph_title(fluctuation_chart, strong("Days by Fluctuation(%)"), display_filter=True)
 
-# dashboard.add_graph_title(
-#     "stacked_area", strong("Monthly Index Abs Move & Volume/500,000 Chart")
-# )
+dashboard.add_graph_title(
+    line_chart, strong("Monthly Index Abs Move & Volume/500,000 Chart")
+)
 
-
-
-dashboard.view_outlines()
+# dashboard.view_outlines()
 
 absGain_eq = VC("close") - VC("open")
 fluctuation_eq = abs(VC("close") - VC("open"))
@@ -202,7 +235,7 @@ str(bubble_chart)
 title_name = HTML('title', h2('Nasdaq 100 Index 1985/11/01-2012/06/29'))
 
 dashboard.add_graphs(
-    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart
+    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart, line_chart
 )
 
 # dashboard.view_outlines()

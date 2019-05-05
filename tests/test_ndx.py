@@ -433,6 +433,78 @@ def test_bar_chart_attributes(bar_chart):
         assert hasattr(bar_chart, col)
 
 
+def test_round_and_division_VS():
+    avg_div = VC("total") / VC("count")
+    avg_eq = round(avg_div)
+    avg = VS("avg", avg_eq)
+
+    expected_avg_div = 'p.count ? (p.total / p.count)'
+    expected_avg_eq = '(Math.round(count ? (p.total / p.count))'
+    expected_avg = 'p.avg = Math.round(count ? (p.total / p.count) : 0);'
+
+    assert str(avg_div) == expected_avg_div
+    assert str(avg_eq) == expected_avg_eq
+    assert str(avg) == expected_avg
+
+
+def test_avg_index_eq():
+
+    avgIndex_eq = VC("sumIndex") / VC("count")
+    avgIndex = VS("avgIndex", avgIndex_eq)
+
+    expected_eq = 'p.count ? (p.sumIndex / p.count)'
+    expected = 'p.avgIndex = p.count ? (p.sumIndex / p.count) : 0;'
+
+    assert str(avgIndex_eq) == expected_eq
+    assert str(avgIndex) == expected
+
+
+def test_move_months_dim(monkeypatch, ndx):
+    monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
+
+    expected = '''
+    var month_group = month_dimension.group().reduce(
+        function (p, v) {
+            ++p.days;
+            p.total += (v.open + v.close) / 2;
+            p.avg = Math.round(p.total / p.days);
+            return p;
+        },
+        function (p, v) {
+            --p.days;
+            p.total -= (v.open + v.close) / 2;
+            p.avg = p.days ? Math.round(p.total / p.days) : 0;
+            return p;
+        },
+        function () {
+            return {days: 0, total: 0, avg: 0};
+        }
+    );
+    '''
+
+    dat = ndx
+
+    def get_month(x):
+        return x.month
+
+    dat["month"] = pd.to_datetime(dat.date)
+    dat["month"] = dat.month.apply(get_month)
+
+    total_eq = (VC("open") + VC("close")) / VC(2)
+    total = VS("total", total_eq)
+
+    avg_eq = round(VC("total") / VC("count"))
+    avg = VS("avg", avg_eq)
+
+    eqs = [total, avg]
+
+    move_months_dim = NamedDimension(
+        eqs, groupby=["month"], group_text="Monthly Index Average"
+    )
+
+    compare_strings(str(move_months_dim), expected)
+
+
 def test_line_chart_attributes(line_chart):
     line_chart_attributes_set = {
         "name",

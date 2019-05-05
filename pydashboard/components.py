@@ -211,8 +211,13 @@ class Dashboard:
         self.global_js_code = "\n".join(GLOBAL_JS_CODE)
         self.html = div(self.item_str, {"class": "container"})
 
-    def add_graph_title(self, chart_object, title, add_reset_link=True):
-        reset_link = f'<a class ="reset" href="javascript:{chart_object.name_replaced}.filterAll();dc.redrawAll();" style="display: none;"> reset </a>'
+    def add_graph_title(self, chart_object, title, add_reset_link=True, filter_language=' range: ', display_filter=False):
+
+        reset_link = f'''<a class ="reset" href="javascript:{chart_object.name_replaced}.filterAll();dc.redrawAll();" style="display: none;"> reset </a>'''
+
+        if display_filter:
+            filter_language_section = f'<span class="reset">{filter_language}<span class="filter"></span></span>'
+            reset_link = filter_language_section + reset_link
 
         return_node = {
             item for item in self.all_nodes if item.attributes.get("id") == chart_object.name
@@ -974,7 +979,7 @@ class VC:
             return VE(["(", self.col_type, self.colname, " * ", other.colname, ")"])
 
     def __abs__(self):
-        return VE(["(", "Math.abs({", self.col_type, self.colname, ")", ")"])
+        return VE(["(", "Math.abs(", self.col_type, self.colname, ")", ")"])
 
     def __truediv__(self, other):
         if other.col_type:
@@ -1109,8 +1114,18 @@ class VS:
 
         if "?" in return_string:
             if ":" not in return_string:
+                if 'Math.round(' in return_string or 'Math.abs(' in return_string:
+                    return_string = return_string[:-1]
+                    return_string += " : 0);"
+                else:
+                    return_string = return_string[:-1]
+                    return_string += " : 0;"
+            else:
                 return_string = return_string[:-1]
                 return_string += " : 0;"
+        else:
+            return_string = return_string[:-1]
+            return_string += " : 0;"
 
         return return_string
 
