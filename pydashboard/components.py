@@ -507,7 +507,7 @@ class Col12(Col):
 
 
 class Dimension:
-    def __init__(self, column, group=None, group_type=None):
+    def __init__(self, column, group=None, group_type=None, modifier=None):
         self.column = column
         self.group = group
         self.group_type = group_type
@@ -516,6 +516,7 @@ class Dimension:
         self.dimension_name = "{dim_replaced}_dimension".format(
             dim_replaced=self.dim_replaced
         )
+        self.modifier = modifier if modifier else ''
         self.group_name = "{dim_replaced}_group".format(dim_replaced=self.dim_replaced)
         GLOBAL_DIMENSION_CODE.append(self.dimension_code)
 
@@ -533,7 +534,7 @@ class Dimension:
 
         if self.group:
             dimension_string.append(
-                f'var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group().{reduce_type}(function(d){{return d["{self.group}"];}});'
+                f'var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group().{reduce_type}(function(d){{return d["{self.group}"]{self.modifier};}});'
             )
         else:
             dimension_string.append(
@@ -541,6 +542,9 @@ class Dimension:
             )
 
         return "\n".join(dimension_string)
+
+    def __str__(self):
+        return self.dimension_code
 
 
 class MultiDimension:

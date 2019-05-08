@@ -291,9 +291,12 @@ def test_fluctuationChart(ndx):
         gap=1,
         centerBar=True,
         alwaysUseRounding=True,
+        round='dc.round.floor',
         margins = Margin(top=10, right=50, bottom=30, left=40),
         xAxis="tickFormat(function(v){return v+'%';})",
         yAxis="ticks(5)",
+        x='d3.scaleLinear().domain([-25, 25])',
+        filter_printer=True
     )
 
     dc_documentation_string = """
@@ -399,7 +402,7 @@ def test_moveChart(monkeypatch, ndx):
             if (isNaN(value)) {
                 value = 0;
             }
-            return dateFormat(d.key) + '\n' + numberFormat(value);
+            return dateFormat(d.key) + numberFormat(value);
         });
     """
 
@@ -672,3 +675,40 @@ def test_bubble_chart(monkeypatch, ndx):
 def test_make_html():
     title_name = HTML('title', h2('Nasdaq 100 Index 1985/11/01-2012/06/29'))
     assert title_name.html_string == '<h2>Nasdaq 100 Index 1985/11/01-2012/06/29</h2>'
+
+
+def test_volume_chart():
+    monthDim = Dimension('month', group="volume", group_type='sum', modifier='/500000')
+
+    stacked_area_range = BarChart(
+        "stacked_area_range",
+        monthDim,
+        width=990,
+        height=40,
+        elasticY=True,
+        alwaysUseRounding=True,
+        round='d3.timeMonth.round',
+        gap=1,
+        centerBar=True,
+        xUnits='d3.timeMonths',
+        margins=Margin(0, 50, 20, 40),
+        renderHorizontalGridLines=False,
+        x='d3.scaleTime().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)])'
+    )
+
+    expected = '''var bar_chart_stacked_area_range = dc.barChart("#stacked_area_range")
+        .width(990)
+        .height(40)
+        .margins({top: 0, right: 50, bottom: 20, left: 40})
+        .dimension(month_dimension)
+        .group(month_group)
+        .elasticY(true)
+        .centerBar(true)
+        .gap(1)
+        .round(d3.timeMonth.round)
+        .xUnits(d3.timeMonths)
+        .alwaysUseRounding(true)
+        .x(d3.scaleTime().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)]));
+        '''
+
+    assert str(stacked_area_range).replace("\n", "").replace(" ", "").replace("\t", "") == str(expected).replace("\n", "").replace(" ", "").replace("\t", "")

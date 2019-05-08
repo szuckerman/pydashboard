@@ -144,7 +144,7 @@ class BubbleMixin(BaseMixin, metaclass=ABCMeta):
         self.radiusValueAccessor = radiusValueAccessor
 
 
-class BarChart(StackMixin):
+class BarChart(StackMixin,CoordinateGridMixin):
     def __init__(
         self,
         name,
@@ -157,6 +157,10 @@ class BarChart(StackMixin):
         xAxis=None,
         yAxis=None,
         margins=None,
+        xUnits=None,
+        round=False,
+        x=False,
+        filter_printer=False,
         *args,
         **kwargs,
     ):
@@ -171,7 +175,11 @@ class BarChart(StackMixin):
         self.outerPadding = outerPadding
         self.xAxis = xAxis
         self.yAxis = yAxis
+        self.xUnits = xUnits
+        self.round = round
         self.margins = margins
+        self.x = x
+        self.filter_printer = filter_printer
 
     @property
     def js_chart_code(self):
@@ -205,23 +213,30 @@ class BarChart(StackMixin):
         if self.gap:
             dimension_string_list.append(f".gap({self.gap})")
 
-        dimension_string_list.append(".round(dc.round.floor)")
+        if self.round:
+            dimension_string_list.append(f".round({self.round})")
+
+        if self.xUnits:
+            dimension_string_list.append(f".xUnits({self.xUnits})")
 
         if self.alwaysUseRounding:
             dimension_string_list.append(f".alwaysUseRounding(true)")
 
-        dimension_string_list.append(f".renderHorizontalGridLines(true)")
+        if self.renderHorizontalGridLines:
+            dimension_string_list.append(f".renderHorizontalGridLines(true)")
 
-        dimension_string_list.append(f".x(d3.scaleLinear().domain([-25, 25]))")
+        if self.x:
+            dimension_string_list.append(f".x({self.x})")
 
-        dimension_string_list.append(
-            """
+        if self.filter_printer:
+            dimension_string_list.append(
+                """
                 .filterPrinter(function (filters) {
-            var filter = filters[0], s = '';
-            s += numberFormat(filter[0]) + '% -> ' + numberFormat(filter[1]) + '%';
-            return s;
-        })
-        """
+                var filter = filters[0], s = '';
+                s += numberFormat(filter[0]) + '% -> ' + numberFormat(filter[1]) + '%';
+                return s;
+            })
+            """
         )
 
         if self.xAxis:
@@ -863,7 +878,7 @@ class LineChart(StackMixin):
             if (isNaN(value)) {
                 value = 0;
             }
-            return dateFormat(d.key) + \n + numberFormat(value);
+            return dateFormat(d.key) + numberFormat(value);
         })"""
         )
 
