@@ -157,6 +157,7 @@ move_months_dim = NamedDimension(
 )
 
 str(move_months_dim)
+
 line_chart = LineChart(
     "monthly-move-chart",
     move_months_dim,
@@ -176,9 +177,9 @@ dashboard.add_graph_title(quarter_chart, strong("Quarters"))
 dashboard.add_graph_title(day_of_week_chart, strong("Day of Week"))
 dashboard.add_graph_title(fluctuation_chart, strong("Days by Fluctuation(%)"), display_filter=True)
 
-dashboard.add_graph_title(
-    line_chart, strong("Monthly Index Abs Move & Volume/500,000 Chart")
-)
+# dashboard.add_graph_title(
+#     line_chart, strong("Monthly Index Abs Move & Volume/500,000 Chart")
+# )
 
 # dashboard.view_outlines()
 
@@ -235,7 +236,8 @@ str(bubble_chart)
 title_name = HTML('title', h2('Nasdaq 100 Index 1985/11/01-2012/06/29'))
 
 dashboard.add_graphs(
-    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart, line_chart
+    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart
+    # , line_chart
 )
 
 # dashboard.view_outlines()

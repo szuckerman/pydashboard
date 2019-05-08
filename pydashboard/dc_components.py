@@ -863,7 +863,7 @@ class LineChart(StackMixin):
             if (isNaN(value)) {
                 value = 0;
             }
-            return dateFormat(d.key) + '\n' + numberFormat(value);
+            return dateFormat(d.key) + \n + numberFormat(value);
         })"""
         )
 
