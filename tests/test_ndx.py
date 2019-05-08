@@ -71,8 +71,8 @@ def test_VE_with_division(monkeypatch):
 
 def test_VE_division_p_col(monkeypatch):
     monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
-    output = VC("sumIndex") / VC("count")
-    assert "p.count ? (p.sumIndex / p.count)" == str(output)
+    output = VC("sumIndex") / VC("count", fix_zero_division=True)
+    assert "p.count ? (p.sumIndex / p.count) : 0" == str(output)
 
 
 def test_ndx_bubble_chart(monkeypatch):
@@ -84,9 +84,9 @@ def test_nameddimension_VC(monkeypatch):
     absGain_eq = (VC("close") - VC("open")) * VC(100)
     fluctuation_eq = abs(VC("close") - VC("open"))
     sumIndex_eq = (VC("open") + VC("close")) / VC(2)
-    avgIndex_eq = VC("sumIndex") / VC("count")
-    percentageGain_eq = (VC("absGain") / VC("avgIndex")) * VC(100)
-    fluctuationPercentage_eq = (VC("fluctuation") / VC("avgIndex")) * VC(100)
+    avgIndex_eq = VC("sumIndex") / VC("count", fix_zero_division=True)
+    percentageGain_eq = (VC("absGain") / VC("avgIndex", fix_zero_division=True)) * VC(100)
+    fluctuationPercentage_eq = (VC("fluctuation") / VC("avgIndex", fix_zero_division=True)) * VC(100)
 
     absGain = VS("absGain", absGain_eq)
     fluctuation = VS("fluctuation", fluctuation_eq)
@@ -144,7 +144,7 @@ def test_nameddimension_VC(monkeypatch):
                 }
     );"""
 
-    assert compare_strings(output, expected)
+    assert str(output).replace("\n", "").replace(" ", "").replace("\t", "") == str(expected).replace("\n", "").replace(" ", "").replace("\t", "")
 
 
 def test_gainOrLossChart(ndx):
@@ -434,13 +434,13 @@ def test_bar_chart_attributes(bar_chart):
 
 
 def test_round_and_division_VS():
-    avg_div = VC("total") / VC("count")
+    avg_div = VC("total") / VC("count", fix_zero_division=True)
     avg_eq = round(avg_div)
     avg = VS("avg", avg_eq)
 
-    expected_avg_div = 'p.count ? (p.total / p.count)'
-    expected_avg_eq = '(Math.round(count ? (p.total / p.count))'
-    expected_avg = 'p.avg = Math.round(count ? (p.total / p.count) : 0);'
+    expected_avg_div = 'p.count ? (p.total / p.count) : 0'
+    expected_avg_eq = '(Math.round(p.count ? (p.total / p.count) : 0))'
+    expected_avg = 'p.avg = Math.round(p.count ? (p.total / p.count) : 0);'
 
     assert str(avg_div) == expected_avg_div
     assert str(avg_eq) == expected_avg_eq
@@ -449,14 +449,14 @@ def test_round_and_division_VS():
 
 def test_avg_index_eq():
 
-    avgIndex_eq = VC("sumIndex") / VC("count")
+    avgIndex_eq = VC("sumIndex") / VC("count", fix_zero_division=True)
     avgIndex = VS("avgIndex", avgIndex_eq)
 
-    expected_eq = 'p.count ? (p.sumIndex / p.count)'
+    expected_eq = 'p.count ? (p.sumIndex / p.count) : 0'
     expected = 'p.avgIndex = p.count ? (p.sumIndex / p.count) : 0;'
 
-    assert str(avgIndex_eq) == expected_eq
-    assert str(avgIndex) == expected
+    assert expected_eq == str(avgIndex_eq)
+    assert expected == str(avgIndex)
 
 
 def test_move_months_dim(monkeypatch, ndx):

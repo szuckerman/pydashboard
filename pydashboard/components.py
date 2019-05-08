@@ -898,8 +898,9 @@ class Add:
 
 
 class VC:
-    def __init__(self, colname):
+    def __init__(self, colname, fix_zero_division=False):
         self.colname = colname
+        self.fix_zero_division = fix_zero_division
 
     @property
     def columns(self):
@@ -990,7 +991,9 @@ class VC:
         else:
             denominator = [other.colname]
         initial_str = [self.col_type, self.colname, " / "] + denominator
-        return VE(denominator + [" ? ", "("] + initial_str + [")"])
+        if self.fix_zero_division or other.fix_zero_division:
+            return VE(denominator + [" ? ", "("] + initial_str + [")", " : ", '0'])
+        return VE(["("] + initial_str + [")"])
 
     __floordiv__ = __truediv__
 
@@ -999,9 +1002,10 @@ class VC:
 
 
 class VE:
-    def __init__(self, vc_list, colname=None):
+    def __init__(self, vc_list, colname=None, fix_zero_division=False):
         self.vc_list = vc_list
         self.colname = colname
+        self.fix_zero_division = fix_zero_division
         self.col_type = None
 
     def __str__(self):
@@ -1050,7 +1054,8 @@ class VE:
         if self.col_type:
             return VE(["(", "Math.round(", self.col_type, *self.vc_list, ")", ")"])
         else:
-            return VE(["(", "Math.round(", *self.vc_list[1:-1], ")", ")"])
+            # return VE(["(", "Math.round(", *self.vc_list[1:-1], ")", ")"])
+            return VE(["(", "Math.round(", *self.vc_list, ")", ")"])
 
     def __truediv__(self, other):
         if other.col_type:
@@ -1064,22 +1069,48 @@ class VE:
         if is_number(string_join(denominator)):
             return VE(["("] + initial_str + [")"])
         else:
-            return VE(denominator + [" ? ", "("] + initial_str + [")", " : 0"])
+            if self.fix_zero_division or other.fix_zero_division:
+                return VE(denominator + [" ? ", "("] + initial_str + [")", " : 0"])
+            return VE(["("] + initial_str + [")", " : 0"])
 
     __floordiv__ = __truediv__
 
 
 class VS:
-    def __init__(self, column, statement, add_or_remove=None):
+    def __init__(self, column, statement, add_or_remove=None, fix_zero_division=False):
         self.statement = statement
         self.column = column
         self.add_or_remove = add_or_remove
+        self.fix_zero_division = fix_zero_division
         self.divisor = (
             str(self.statement).split("?")[0].strip()
             if "?" in str(self.statement)
             else "aa"
         )
         self.divisor_parenthesis = self.divisor[0] == "(" and self.divisor[-1] == ")"
+
+    def add_or_remove_semicolon(self, statement):
+        if ';' in str(statement) and str(statement)[-1] != ';':
+            new_statement = statement.replace(';', '')
+            new_statement += ';'
+            return new_statement
+        else:
+            return statement + ';'
+
+    def move_colon_zero_to_end(self, equation):
+        colon_zero = ' : 0'
+        colon_zero_parenthesis = ' : 0)'
+
+        if colon_zero_parenthesis in equation:
+            new_equation = equation.replace(colon_zero_parenthesis, '')
+            return new_equation + colon_zero_parenthesis
+
+        elif colon_zero in equation:
+            new_equation = equation.replace(colon_zero, '')
+            return new_equation + colon_zero
+
+        else:
+            return equation
 
     @property
     def make_statement(self):
@@ -1089,8 +1120,8 @@ class VS:
                 + self.column
                 + self.plus_or_minus(self.statement, self.add_or_remove)
                 + "= "
-                + str(self.statement)
-                + ";"
+                + self.add_or_remove_semicolon(self.move_colon_zero_to_end(str(self.statement)))
+                # + ";"
             )
         else:
             if str(self.statement)[0] == "(" and str(self.statement)[-1] == ")":
@@ -1099,8 +1130,8 @@ class VS:
                     + self.column
                     + self.plus_or_minus(self.statement, self.add_or_remove)
                     + "= "
-                    + str(self.statement)[1:-1]
-                    + ";"
+                    + self.add_or_remove_semicolon(self.move_colon_zero_to_end(str(self.statement)[1:-1]))
+                    # + ";"
                 )
             else:
                 return_string = (
@@ -1108,24 +1139,24 @@ class VS:
                     + self.column
                     + self.plus_or_minus(self.statement, self.add_or_remove)
                     + "= "
-                    + str(self.statement)
-                    + ";"
+                    + self.add_or_remove_semicolon(self.move_colon_zero_to_end(str(self.statement)))
+                    # + ";"
                 )
 
-        if "?" in return_string:
-            if ":" not in return_string:
-                if 'Math.round(' in return_string or 'Math.abs(' in return_string:
-                    return_string = return_string[:-1]
-                    return_string += " : 0);"
-                else:
-                    return_string = return_string[:-1]
-                    return_string += " : 0;"
-            else:
-                return_string = return_string[:-1]
-                return_string += " : 0;"
-        else:
-            return_string = return_string[:-1]
-            return_string += " : 0;"
+        # if "?" in return_string:
+        #     if ":" not in return_string:
+        #         if 'Math.round(' in return_string or 'Math.abs(' in return_string:
+        #             return_string = return_string[:-1]
+        #             return_string += " : 0);"
+        #         else:
+        #             return_string = return_string[:-1]
+        #             return_string += " : 0;"
+        #     else:
+        #         return_string = return_string[:-1]
+        #         return_string += " : 0;"
+        # else:
+        #     return_string = return_string[:-1]
+        #     return_string += " : 0;"
 
         return return_string
 
