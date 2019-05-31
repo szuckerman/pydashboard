@@ -789,6 +789,7 @@ class LineChart(StackMixin):
         brushOn=False,
         renderArea=False,
         margins=False,
+        rangeChart=False,
         *args,
         **kwargs,
     ):
@@ -804,6 +805,7 @@ class LineChart(StackMixin):
         self.brushOn = brushOn
         self.renderArea = renderArea
         self.margins = margins
+        self.rangeChart = rangeChart
 
     @property
     def js_chart_code(self):
@@ -833,10 +835,11 @@ class LineChart(StackMixin):
         if self.mouseZoomable:
             dimension_string_list.append(".mouseZoomable(true)")
 
-        dimension_string_list.append(f".rangeChart(volumeChart)")
+        if self.rangeChart:
+            dimension_string_list.append(f".rangeChart({self.rangeChart.name_replaced})")
 
         dimension_string_list.append(
-            f".x(d3.scaleTime().domain([newDate(1985,0,1),newDate(2012,11,31)]))"
+            f".x(d3.scaleTime().domain([new Date(1985,0,1),new Date(2012,11,31)]))"
         )
 
         dimension_string_list.append(f".round(d3.timeMonth.round)")

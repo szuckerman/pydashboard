@@ -382,7 +382,6 @@ def test_moveChart(monkeypatch, ndx):
         .margins({top: 30, right: 50, bottom: 25, left: 40})
         .dimension(month_dimension)
         .mouseZoomable(true)
-        .rangeChart(volumeChart)
         .x(d3.scaleTime().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)]))
         .round(d3.timeMonth.round)
         .xUnits(d3.timeMonths)
@@ -712,3 +711,28 @@ def test_volume_chart():
         '''
 
     assert str(stacked_area_range).replace("\n", "").replace(" ", "").replace("\t", "") == str(expected).replace("\n", "").replace(" ", "").replace("\t", "")
+
+
+def test_dimension_func(monkeypatch, ndx):
+    monkeypatch.setattr(s, "DATA_COLUMNS", "{'close', 'open'}")
+
+    dat = ndx
+
+    fluctuation_eq = abs(VC("close") - VC("open"))
+
+    month_dim = Dimension("month", group_type="sum", func=fluctuation_eq)
+
+    assert 'Math.abs(d.close - d.open)' == month_dim.func
+
+    expected_str =  '''
+    var month_dimension = facts.dimension(function(d){return d['month'];});
+    
+    var month_group = month_dimension.group().reduceSum(function(d){
+        return Math.abs(d.close - d.open);
+    });
+    '''
+
+    expected_str_replaced = str(expected_str).replace("\n", "").replace(" ", "").replace("\t", "")
+    asserted_str_replaced = str(month_dim).replace("\n", "").replace(" ", "").replace("\t", "")
+
+    assert expected_str_replaced == asserted_str_replaced

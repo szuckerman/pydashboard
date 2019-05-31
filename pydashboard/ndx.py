@@ -118,11 +118,16 @@ fluctuation_chart = BarChart(
     fluctuation_dim,
     width=420,
     height=180,
-    margins=Margin(top=10, right=50, bottom=30, left=40),
     elasticY=True,
-    alwaysUseRounding=True,
     gap=1,
     centerBar=True,
+    alwaysUseRounding=True,
+    round='dc.round.floor',
+    margins=Margin(top=10, right=50, bottom=30, left=40),
+    xAxis="tickFormat(function(v){return v+'%';})",
+    yAxis="ticks(5)",
+    x='d3.scaleLinear().domain([-25, 25])',
+    filter_printer=True
 )
 
 day_of_week_chart = RowChart(
@@ -134,13 +139,32 @@ day_of_week_chart = RowChart(
     xAxis="ticks(4)",
 )
 
+monthDim = Dimension('month', group="volume", group_type='sum', modifier='/500000')
 
-def get_month(x):
-    return x.month
+stacked_area_range = BarChart(
+    "monthly-volume-chart",
+    monthDim,
+    width=990,
+    height=40,
+    elasticY=True,
+    alwaysUseRounding=True,
+    round='d3.timeMonth.round',
+    gap=1,
+    centerBar=True,
+    xUnits='d3.timeMonths',
+    margins=Margin(0, 50, 20, 40),
+    renderHorizontalGridLines=False,
+    x='d3.scaleTime().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)])'
+)
+
+# .margins({top: 0, right: 50, bottom: 20, left: 40})
+# .x(d3.scaleTime().domain([new Date(1985, 0, 1), new Date(2012, 11, 31)]))
+# .round(d3.timeMonth.round)
+# .xUnits(d3.timeMonths);
 
 
 dat["month"] = pd.to_datetime(dat.date)
-dat["month"] = dat.month.apply(get_month)
+dat["month"] = dat.month.dt.month
 
 total_eq = (VC("open") + VC("close")) / VC(2)
 total = VS("total", total_eq)
@@ -168,6 +192,7 @@ line_chart = LineChart(
     renderArea=True,
     margins=Margin(top=30, right=50, bottom=25, left=40),
     xUnits="d3.timeMonths",
+    rangeChart=stacked_area_range
 )
 
 dashboard = s.Dashboard(data=dat, template=t)
@@ -177,9 +202,9 @@ dashboard.add_graph_title(quarter_chart, strong("Quarters"))
 dashboard.add_graph_title(day_of_week_chart, strong("Day of Week"))
 dashboard.add_graph_title(fluctuation_chart, strong("Days by Fluctuation(%)"), display_filter=True)
 
-# dashboard.add_graph_title(
-#     line_chart, strong("Monthly Index Abs Move & Volume/500,000 Chart")
-# )
+dashboard.add_graph_title(
+    line_chart, strong("Monthly Index Abs Move & Volume/500,000 Chart")
+)
 
 # dashboard.view_outlines()
 
@@ -190,12 +215,22 @@ avgIndex_eq = VC("sumIndex") / VC("count")
 percentageGain_eq = (VC("absGain") / VC("avgIndex")) * VC(100)
 fluctuationPercentage_eq = (VC("fluctuation2") / VC("avgIndex")) * VC(100)
 
+
 absGain = VS("absGain", absGain_eq)
 fluctuation2 = VS("fluctuation2", fluctuation_eq)
 sumIndex = VS("sumIndex", sumIndex_eq)
 avgIndex = VS("avgIndex", avgIndex_eq)
 percentageGain = VS("percentageGain", percentageGain_eq)
 fluctuationPercentage = VS("fluctuationPercentage", fluctuationPercentage_eq)
+
+sumIndex = VS("sumIndex", sumIndex_eq)
+avgIndex = VS("avgIndex", avgIndex_eq, fix_zero_division=True)
+
+columns = [sumIndex, avgIndex]
+
+index_avg_by_month_group = NamedDimension(columns, base_dimension=monthDim)
+
+monthDim
 
 columns = [
     absGain,
@@ -235,9 +270,12 @@ str(bubble_chart)
 
 title_name = HTML('title', h2('Nasdaq 100 Index 1985/11/01-2012/06/29'))
 
+
+
+
 dashboard.add_graphs(
-    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart
-    # , line_chart
+    title_name, gain_loss_chart, quarter_chart, fluctuation_chart, day_of_week_chart, bubble_chart,
+    stacked_area_range, line_chart
 )
 
 # dashboard.view_outlines()

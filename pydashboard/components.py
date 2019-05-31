@@ -507,18 +507,27 @@ class Col12(Col):
 
 
 class Dimension:
-    def __init__(self, column, group=None, group_type=None, modifier=None):
+    def __init__(self, column, group=None, group_type=None, modifier=None, func=None, group_name=None):
         self.column = column
         self.group = group
         self.group_type = group_type
+        self.func = ''.join(self._change_p_to_d(i) for i in func.vc_list[1:-1]) if func else None
         self.dim_replaced = column.replace(" ", "_").replace("(", "").replace(")", "")
         # self.dimension_code = self.make_dimension(column)
         self.dimension_name = "{dim_replaced}_dimension".format(
             dim_replaced=self.dim_replaced
         )
         self.modifier = modifier if modifier else ''
-        self.group_name = "{dim_replaced}_group".format(dim_replaced=self.dim_replaced)
+        self.group_name = group_name.get('group_name') if group_name else "{dim_replaced}_group".format(dim_replaced=self.dim_replaced)
         GLOBAL_DIMENSION_CODE.append(self.dimension_code)
+
+    def _change_p_to_d(self, x):
+        if x == 'p.':
+            return 'd.'
+        elif x == 'v.':
+            return 'd.'
+        else:
+            return x
 
     @property
     def dimension_code(self):
@@ -536,6 +545,12 @@ class Dimension:
             dimension_string.append(
                 f'var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group().{reduce_type}(function(d){{return d["{self.group}"]{self.modifier};}});'
             )
+
+        elif self.func:
+            dimension_string.append(
+                f'var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group().{reduce_type}(function(d){{return {self.func};}});'
+            )
+
         else:
             dimension_string.append(
                 f"var {self.dim_replaced}_group = {self.dim_replaced}_dimension.group();"
@@ -711,33 +726,37 @@ class NamedDimension2:
 
 
 class NamedDimension:
-    def __init__(self, columns=None, groupby=None, group_text=None):
+    def __init__(self, columns=None, groupby=None, group_text=None, base_dimension=None, name=None):
 
         self.columns = columns
         self.group_text = group_text
 
-        if isinstance(groupby, list):
-            self.dim_replaced = [
-                column.replace(" ", "_").replace("(", "").replace(")", "")
-                for column in groupby
-            ]
+        if groupby:
+            if isinstance(groupby, list):
+                self.dim_replaced = [
+                    column.replace(" ", "_").replace("(", "").replace(")", "")
+                    for column in groupby
+                ]
 
-        else:
-            self.dim_replaced = (
-                groupby.replace(" ", "_").replace("(", "").replace(")", "")
-            )
+            else:
+                self.dim_replaced = (
+                    groupby.replace(" ", "_").replace("(", "").replace(")", "")
+                )
 
-        if isinstance(self.dim_replaced, list):
-            self.dim = (
-                "[" + ", ".join(f"d['{item}']" for item in self.dim_replaced) + "]"
-            )
-            self.dim_replaced_together = "_".join(self.dim_replaced)
+            if isinstance(self.dim_replaced, list):
+                self.dim = (
+                    "[" + ", ".join(f"d['{item}']" for item in self.dim_replaced) + "]"
+                )
+                self.dim_replaced_together = "_".join(self.dim_replaced)
 
-        else:
-            self.dim = f"d['{self.dim_replaced}']"
-            self.dim_replaced_together = self.dim_replaced
+            else:
+                self.dim = f"d['{self.dim_replaced}']"
+                self.dim_replaced_together = self.dim_replaced
 
-        self.dimension_name = f"{self.dim_replaced_together}_dimension"
+        if base_dimension:
+            self.dim_replaced_together = name
+
+        self.dimension_name = base_dimension.dimension_name if base_dimension else f"{self.dim_replaced_together}_dimension"
         self.group_name = f"{self.dim_replaced_together}_group"
         GLOBAL_DIMENSION_CODE.append(self.dimension_code)
 
@@ -789,7 +808,7 @@ class NamedDimension:
         )
 
         reduce_group_code = f"""
-            var {self.dim_replaced_together}_group = {self.dim_replaced_together}_dimension.group().reduce(
+            var {self.group_name} = {self.dimension_name}.group().reduce(
                 /* callback for when data is added to the current filter results */
                 {data_added}
                 /* callback for when data is removed from the current filter results */
